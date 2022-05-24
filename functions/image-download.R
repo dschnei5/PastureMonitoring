@@ -3,45 +3,7 @@
 ######################################################################################
 
 ####User Defined Functions####
-check4pw <- function(usr = "Username", ser = "Service"){
-  klst <- key_list(service = ser)
-  if (length(klst$service)==0) {
-    con <- if (interactive()) stdin() else file('stdin');
-    message(paste0("Please enter your password for ",ser,":"))
-    psswrd <- scan(file=con, sep=',', nlines=1, what = 'character', quiet=TRUE);
-    key_set_with_value(service = ser,username = usr ,password = psswrd);
-  } else {
-    klst <- klst[klst$username==usr,]
-    if (length(klst$service)==0){
-      con <- if (interactive()) stdin() else file('stdin');
-      message(paste0("Please enter your password for ",ser,":"));
-      psswrd <- scan(file=con, sep=',', nlines=1, what = 'character', quiet=TRUE);
-      key_set_with_value(service = ser,username = usr ,password = psswrd);
-    } else {
-      psswrd <- key_get(service = ser, username = usr)
-    }
-  }
-  return(psswrd)
-};
-message("check4pw - successfully loaded");
-cld.connect <- function() {
-  message(paste("Connecting to cloud drive:", cld.dir))
-  pwd <- check4pw(usr = cld.usr, ser = cld.ser.nm)
-  cmd1 <- paste0("net use ",drv.l,": \\\\",cld.dir," /user:",cld.usr," ",pwd)
-  system(cmd1, wait=TRUE)
-  d.dir <- paste0(drv.l,":")
-};
-message("cld.connect - successfully loaded");
-cld.disconnect <- function() {
-  message(paste("Disconnecting from cloud drive:", cld.dir))
-  cmd2 <- paste0("net use ",d.dir," ", "/delete");
-  system(cmd2, wait=TRUE)
-};
-message("cld.disconnect - successfully loaded");
-create.dirs <- function(dir = "Data Directory"){
-  dir.create(dir,showWarnings = FALSE, recursive = TRUE)
-}
-message("create.dirs - successfully loaded");
+
 dwnld.imgs <- function(x = "tile"){
   pw <- check4pw(usr = cop.usr,ser = "Copernicus")
   paste0("Checking last ", numdaysback," for imagery with <", cld.pc,"% cloud for tile ",x)

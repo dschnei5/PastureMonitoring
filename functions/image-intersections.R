@@ -48,11 +48,6 @@ test_intersection2 <- function(a,b){
   return(out)
 };
 message("test_intersection2 - successfully loaded!");
-done.files <- function (x) {
-  
-  any(grepl("ProcessingCompleted.txt",list.files(x))==TRUE)
-  
-};
 message("done.files - successfully loaded!")
 
 ####END SCRIPT####

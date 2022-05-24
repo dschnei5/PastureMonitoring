@@ -4,7 +4,7 @@
 
 ####User Defined Functions####
 done.files <- function (x) {
-    any(grepl("ProcessingCompleted.txt",list.files(x))==TRUE)
+    (any(grepl("ProcessingCompleted.inf",list.files(x))==TRUE)|any(grepl("ProcessingCompleted.txt",list.files(x))==TRUE))
 };
 message("done.files - successfully loaded");
 any.zips <- function (x) {
@@ -12,14 +12,14 @@ any.zips <- function (x) {
 };
 message("any.zips - successfully loaded!");
 sen.folds <- function (d = "Data Directory") {
-  sentinel.folds <- list.dirs(path = paste0(d,"/SentinelImages"), recursive = FALSE);
-  sentinel.folds <- sentinel.folds[!grepl("SentinelImages_NTmosaic",sentinel.folds)];
+  sentinel.folds <- list.dirs(path = paste0(d,"/sentinelimages"), recursive = FALSE);
+  sentinel.folds <- sentinel.folds[!grepl("sentinelimages_ntmosaic",sentinel.folds)];
   sentinel.dirs <- vector();
   for (i in seq_along(sentinel.folds)){
     if (length(list.dirs(sentinel.folds[i]))>1) {
       sentinel.dirs.tmp <- list.dirs(sentinel.folds[i], recursive = FALSE);
       sentinel.lng <- unlist(lapply(sentinel.dirs.tmp,done.files));
-      sentinel.dirs.tmp <- sentinel.dirs.tmp[!sentinel.lng];
+      sentinel.dirs.tmp <- sentinel.dirs.tmp[sentinel.lng];
       sentinel.lng2 <- unlist(lapply(sentinel.dirs.tmp,any.zips));
       sentinel.dirs.tmp <- sentinel.dirs.tmp[sentinel.lng2];
       sentinel.dirs.tmp <- sentinel.dirs.tmp[grepl("Sentinel_",sentinel.dirs.tmp)];
@@ -27,7 +27,8 @@ sen.folds <- function (d = "Data Directory") {
     }
   } # END i Loop
   rm(i, sentinel.dirs.tmp, sentinel.lng, sentinel.lng2);
-  message(paste(Sys.time(),"- There are", length(sentinel.dirs), "directories to preprocess.  It can take up to 40mins/tile/directory to process..."));
+  message(paste(Sys.time(),"- There are", length(sentinel.dirs), "directories to pre-process.  It can take up to 40mins/tile/directory to process..."));
+  if(length(sentinel.dirs)>0) {print(sentinel.dirs)};
   return(sentinel.dirs)
 };
 message("sen.folds - successfully loaded");
@@ -54,9 +55,9 @@ message("sen2cor - successfully loaded");
 preprocess.sentinel <- function(x) {
   #d.dir <- get("d.dir", envir = .GlobalEnv);
   files.zip <- list.files(x,pattern = "\\.zip",include.dirs = FALSE);
-  dir.create(paste0(x,"/unzipped"));
-  dir.create(paste0(x,"/maps"));
-  dir.create(paste0(x,"/ready"));
+  suppressWarnings(dir.create(paste0(x,"/unzipped")));
+  suppressWarnings(dir.create(paste0(x,"/maps")));
+  suppressWarnings(dir.create(paste0(x,"/ready")));
   if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==0) {
     unzip(dir = x,fn = files.zip)
     sen2cor(dir = x)
@@ -102,25 +103,27 @@ create.tifs <- function(x) {
     img01 <- stack(r1,r2,r3,r4);
     rm(r1,r2,r3,r4);
     gc();
-    print(paste(Sys.time(),"Writing RGB raster to file, this takes time..."));
-    t1 <- Sys.time();
-    writeRaster(img01, file= paste0(x,"/ready/",imageryname,"_rgb_mosaic.tif"), format="GTiff", overwrite=TRUE);
-    print(paste(Sys.time(),"...Done. Run length =",Sys.time()-t1))
-    print(paste(Sys.time(),"- Converting stack to brick, this takes time..."));
-    t1 <- Sys.time();
+    t1 <- now();
+    print(paste(t1,"Writing RGB raster to file, this takes time..."));
+    writeRaster(img01, file= paste0(x,"/ready/",imageryname,"_rgb.tif"), format="GTiff", overwrite=TRUE);
+    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    t1 <- now();
+    print(paste(t1,"- Converting stack to brick, this takes time..."));
     img02 <- brick(img01);
-    print(paste(Sys.time(),"...Done. Run length =",Sys.time()-t1));
+    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     rm(img01);
     gc();
     gc();
-    print(paste(Sys.time(),"- Creating NDVI image, this takes time..."));
-    t1 <- Sys.time();
+    t1 <- now();
+    print(paste(t1,"- Creating NDVI image, this takes time..."));
     ndvi <- (img02[[4]] - img02[[1]]) / (img02[[4]] + img02[[1]]);
-    print(paste(Sys.time(),"...Done. Run length =",Sys.time()-t1));
-    print(paste(Sys.time(),"Writing NDVI raster to file, this takes time..."));
-    t1 <- Sys.time();
+    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    t1 <- now();
+    print(paste(t1,"Writing NDVI raster to file, this takes time..."));
     writeRaster(x = ndvi,file= paste0(x,"/ready/",imageryname,"_ndvi.tif"), format = "GTiff", overwrite = TRUE);
-    print(paste(Sys.time(),"...Done. Run length =",Sys.time()-t1));
+    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    out.mess <- "This file indicates that preprocessing had been performed.  It is generated to ensure that further processing is not attempted on this folder.  Please delete this file, along with the 'unzipped'; 'ready' and 'maps' folders if you wish to rerun the preprocessing loop on this raw image folder"
+    write.table(out.mess, file = paste0(x,"/ProcessingCompleted.inf"), row.names = FALSE, col.names = FALSE);
     rm(t1,img02,ndvi);
     gc();
     gc();

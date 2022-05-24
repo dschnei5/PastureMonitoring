@@ -39,7 +39,7 @@ sa.act <- "parg" # Master Shiny apps account (required)
 
 ####Other Settings####
 
-tiles <- c("56JLM"); # The sentinel tiles to download (required)
+tiles <- c("56JLL","56JLN"); # The sentinel tiles to download (required)
 
 cld.pc <- 5; # percentage of cloud allowed for image download (required)
 
