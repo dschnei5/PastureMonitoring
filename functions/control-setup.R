@@ -9,6 +9,7 @@ source(file = "functions/load-libraries.R");
 print("Loadings settings file....");
 source(file = "settings/settings.R");
 
+print("Loading user defined functions...");
 source(file = "functions/setup.R");
 
 source(file = "functions/image-download.R")
@@ -24,6 +25,6 @@ rm(list.of.packages,loadlibraries);
 print("Setting up directories...");
 if (exists("cld.dir")) {d.dir <- cld.connect()};
 sapply(paste0(d.dir,"\\sentinelimages\\T",tiles),create.dirs)
-dir.create(paste0(d.dir,"\\treemasks"),recursive = TRUE,showWarnings = FALSE);
+dir.create(paste0(d.dir,"\\treemasks"),recursive = TRUE,showWarnings = FALSE)
 
 ####END SCRIPT####

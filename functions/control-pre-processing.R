@@ -6,13 +6,7 @@
 
 print("Loading user defined functions...");
 
-source(file = "functions/image-download.R");
-
 source(file = "functions/preprocess-images.R");
-
-source(file = "functions/image-intersections.R");
-
-source(file = "functions/app-deploy.R");
 
 ####Execute Processing####
 

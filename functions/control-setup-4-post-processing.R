@@ -4,6 +4,8 @@
 
 ####User Defined Functions####
 
+print("Loading user defined functions...");
+
 source(file = "functions/create-calib.R");
 
 source(file = "functions/cleanup-data-dirs.R");

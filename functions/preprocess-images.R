@@ -3,10 +3,7 @@
 ######################################################################################
 
 ####User Defined Functions####
-done.files <- function (x) {
-    (any(grepl("ProcessingCompleted.inf",list.files(x))==TRUE)|any(grepl("ProcessingCompleted.txt",list.files(x))==TRUE))
-};
-message("done.files - successfully loaded");
+
 any.zips <- function (x) {
   any(grepl("..zip$",list.files(x))==TRUE)
 };
@@ -19,7 +16,7 @@ sen.folds <- function (d = "Data Directory") {
     if (length(list.dirs(sentinel.folds[i]))>1) {
       sentinel.dirs.tmp <- list.dirs(sentinel.folds[i], recursive = FALSE);
       sentinel.lng <- unlist(lapply(sentinel.dirs.tmp,done.files));
-      sentinel.dirs.tmp <- sentinel.dirs.tmp[sentinel.lng];
+      sentinel.dirs.tmp <- sentinel.dirs.tmp[!sentinel.lng];
       sentinel.lng2 <- unlist(lapply(sentinel.dirs.tmp,any.zips));
       sentinel.dirs.tmp <- sentinel.dirs.tmp[sentinel.lng2];
       sentinel.dirs.tmp <- sentinel.dirs.tmp[grepl("Sentinel_",sentinel.dirs.tmp)];
