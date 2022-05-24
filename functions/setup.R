@@ -7,7 +7,7 @@ done.files <- function (x) {
   (any(grepl("ProcessingCompleted.inf",list.files(x))==TRUE)|any(grepl("ProcessingCompleted.txt",list.files(x))==TRUE))
 };
 message("done.files - successfully loaded");
-check4pw <- function(usr = "Username", ser = "Service"){
+check4pw <- function(usr = "Username", ser = "Service") {
   klst <- key_list(service = ser)
   if (length(klst$service)==0) {
     con <- if (interactive()) stdin() else file('stdin');
@@ -42,7 +42,7 @@ cld.disconnect <- function() {
   system(cmd2, wait=TRUE)
 };
 message("cld.disconnect - successfully loaded");
-create.dirs <- function(dir = "Data Directory"){
+create.dirs <- function(dir = "Data Directory") {
   dir.create(dir,showWarnings = FALSE, recursive = TRUE)
 };
 message("create.dirs - successfully loaded");
@@ -181,4 +181,82 @@ create.treemask <- function(tm = " tm2create list") {
   
 };
 message("create.treemask - successfully loaded")
+load.pm <- function() {
+  pmods.ls <- list.files(paste0(w.dir,"/pasturemodels"),pattern = ".rda");
+  for (i in seq_along(pmods.ls)){
+    load(file = paste0(w.dir,"/pasturemodels/",pmods.ls[i]), verbose = TRUE, envir = .GlobalEnv);
+    Sys.sleep(0.5);
+  }; #End i Loop
+  rm(i);
+  
+  Sys.sleep(2);
+};
+message("load.pm - successfully loaded");
+list.shp.pms <- function(x) {
+  as.character(unique(x@data$PAS_TYP))
+};
+message("list.shp.pms - successfully loaded");
+chk4mods.unavail <- function(mods = "Character vector of PM names", kill = "TRUE/FALSE") {
+  l.mods <- ls(envir = .GlobalEnv)[grep(".glm",ls(envir = .GlobalEnv))]
+  l.mods <- gsub(".glm","",l.mods)
+  mods <- mods[!mods %in% l.mods]
+  if (length(mods)==0) {
+    message("All pasture models needed for current shapefiles are loaded")
+    return(NULL)
+  } else {
+    if (kill){
+      message("Some pasture models needed for current shapefiles are not available")
+      message(paste0("Please update shapefile PAS_TYP columns to only include available model names or add a calibration .csv file to ", d.dir, "/calibrationdata before next run"))
+      Sys.sleep(10)
+      stop(paste0("Unavailable and required pasture model:",mods, sep = "\n"))
+    }
+    if (!kill){
+      message("Some pasture models needed for current shapefiles are not available - will try and make them from calibration data if available")
+      return(mods)
+    }
+  }
+};
+message("chk4mods.unavail - successfully loaded");
+build.new.mods <- function(dd = "Data Directory") {
+  calib.dta.dir <- paste0(dd,"/calibrationdata")
+  calib.dta.files1 <- list.files(calib.dta.dir, pattern = "_calib.csv", ignore.case = TRUE, full.names = FALSE)
+  calib.dta.files1 <- gsub("_calib.csv","",calib.dta.files1)
+  mods2build <- chk4mods.unavail(calib.dta.files1,kill = FALSE)
+  for (i in seq_along(mods2build)){
+    mod.nam <- mods2build[i]
+    message(paste("Building", mod.nam, "model..."))
+    dta.in <- read.csv(paste0(calib.dta.dir,"/",mod.nam,"_calib.csv"),header = TRUE, stringsAsFactors = FALSE)
+    print(head(dta.in))
+    Sys.sleep(2)
+    # load(file = paste0(w.dir,"/pasturemodels/ACS211NDVI-SentinelNDVI.rda"), verbose = TRUE);
+    dta.cor <- data.frame('NDVI.ACS211' = dta.in$NDVI, stringsAsFactors = FALSE);
+    dta.cor$NDVI.SENTINEL <- predict(dta.lm1,newdata = dta.cor,type = 'response');
+    dta.in$NDVI <- dta.cor$NDVI.SENTINEL;
+    rm(dta.lm1);
+    ndvi1 <- paste0(mod.nam,".CC_NDVI")
+    gdm1 <- paste0(mod.nam,".GDM")
+    colnames(dta.in) <- c(ndvi1,gdm1);
+    ndvi2 <- paste0("dta.in$",ndvi1)
+    gdm2 <- paste0("dta.in$",gdm1)
+    dta.in <- dta.in[with(dta.in, order(eval(parse(text=ndvi2)))), ];
+    mod.nam2 <- paste0(mod.nam,".glm")
+    assign(mod.nam2,glm(eval(parse(text=gdm1))~eval(parse(text=ndvi1)), family = quasipoisson(link = "log"), data = dta.in))
+    pred.seq <- data.frame(col1 = sort(eval(parse(text=ndvi2))))
+    colnames(pred.seq) <- ndvi1
+    pred.glm <- predict(eval(parse(text=mod.nam2)),pred.seq,type = 'response');
+    x11()
+    plot(eval(parse(text=gdm2))~eval(parse(text=ndvi2)), pch = 16, cex = 0.75, main = mod.nam, xlab = "CropCircle Derived Sentinel NDVI", ylab = "Green Dry Matter (kg/ha)");
+    lines(y = pred.glm, x = pred.seq[[1]], lty = 2, col = 'red');
+    Sys.sleep(10)
+    dev.off()
+    pdf(file = paste0(w.dir,"/pasturemodels/",mod.nam,"_calib.pdf"))
+    plot(eval(parse(text=gdm2))~eval(parse(text=ndvi2)), pch = 16, cex = 0.75, main = mod.nam, xlab = "CropCircle Derived Sentinel NDVI", ylab = "Green Dry Matter (kg/ha)");
+    lines(y = pred.glm, x = pred.seq[[1]], lty = 2, col = 'red');
+    dev.off()
+    pm <- eval(parse(text=mod.nam2))
+    save(list = mod.nam2, file = paste0(w.dir,"/pasturemodels/",mod.nam,"_calib.rda"))
+    message(paste("...", mod.nam, "model built"))
+    Sys.sleep(3)
+  }
+}
 ####END SCRIPT####

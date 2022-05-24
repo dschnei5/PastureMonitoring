@@ -17,10 +17,12 @@ tryCatch(
   error=function(cond){
     message("Here is the error message:");
     message(cond)
+    write.table(cond, file = paste0("tmp/ProcessingError.txt"), row.names = FALSE, col.names = FALSE);
   },
   warning=function(cond){
     message("Here are the warning messages:");
     message(cond)
+    write.table(cond, file = paste0("tmp/ProcessingWarnings.txt"), row.names = FALSE, col.names = FALSE);
   },
   finally={
     rm(list=ls());

@@ -24,4 +24,10 @@ if (Interactive){
     tm2create <- select.treemasks(tm = tm2create)
     lapply(tm2create,create.treemask)
   }
+  load.pm();
+  shp.mods <- unlist(lapply(shps,list.shp.pms))
+  build.new.mods(dd = d.dir)
+  un.av.mods <- chk4mods.unavail(mods = shp.mods, kill = TRUE)
+   
+  
 }

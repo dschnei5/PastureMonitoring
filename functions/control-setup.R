@@ -26,5 +26,6 @@ print("Setting up directories...");
 if (exists("cld.dir")) {d.dir <- cld.connect()};
 sapply(paste0(d.dir,"\\sentinelimages\\T",tiles),create.dirs)
 dir.create(paste0(d.dir,"\\treemasks"),recursive = TRUE,showWarnings = FALSE)
-
+dir.create(paste0(d.dir,"\\shapefiles"),recursive = TRUE,showWarnings = FALSE)
+dir.create(paste0(d.dir,"\\calibrationdata"),recursive = TRUE,showWarnings = FALSE)
 ####END SCRIPT####
