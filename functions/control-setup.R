@@ -11,8 +11,7 @@ flog.appender(appender.file(paste0(w.dir,"/tmp/processor.log")))
 flog.threshold('WARNING')
 
 print("Loading user defined functions...");
-source(file = "functions/setup.R");
-
+source(file = "functions/setup-4-post-processing.R");
 source(file = "functions/image-download.R")
 
 ####Execute Processing####

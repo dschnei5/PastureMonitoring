@@ -38,12 +38,12 @@ if (Interactive) {
   }
   shps <- check4shapefiles(dd = d.dir);
   
-
-  
-   
-  
 }
 
-if (!Interactive) {}
+if (!Interactive) {
+  shps <- check4shapefiles(dd = d.dir);
+  md5 <- md5.check(dd = d.dir)
+  UCRS <- load.UCRS()
+}
 
 ####END SCRIPT####
