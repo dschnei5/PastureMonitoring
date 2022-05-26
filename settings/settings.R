@@ -27,6 +27,8 @@ d.dir <- "C:/R/PastureMonitoringData"; # Local Data Directory (hash out if cloud
 
 # drv.l <- "z"; # Drive letter to temporarily allocate to cloud directory on mount (required if using cloud directory)
 
+s.dir <- "C:/R/PastureMonitoringSentinel" # Location of Sentinel Images
+
 ####Set Accounts####
 
 cld.usr <- "UNE\\dschnei5"; # Cloud drive username (if applicable)
@@ -35,7 +37,11 @@ cld.ser.nm <- "Cloud.UNE"; # Cloud service name (if applicable)
 
 cop.usr <- "dschnei5"; # Copernicus open access hub username (required)
 
-sa.act <- "parg" # Master Shiny apps account (required)
+master.app <- "/PastureApp_eh3kTu23W2d0i4Y"
+
+avail.app.accts <- c("une-ers","parg"); # Master Shiny apps account (required)
+
+master.app.acct <- "parg"
 
 ####Other Settings####
 

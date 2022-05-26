@@ -7,7 +7,15 @@
 print("Welcome to the pasture monitoring processor");
 Sys.sleep(3);
 
-tryCatch(
+####Load Packages####
+source(file = "functions/load-libraries.R");
+print("Loading required packages...");
+loadlibraries(pkg = list.of.packages);
+rm(list.of.packages,loadlibraries);
+
+####Initiate Processor####
+
+tryCatchLog(
   {
     source(file = "functions/control-setup.R")
     source(file = "functions/control-pre-processing.R");
@@ -17,12 +25,10 @@ tryCatch(
   error=function(cond){
     message("Here is the error message:");
     message(cond)
-    write.table(cond, file = paste0("tmp/ProcessingError.txt"), row.names = FALSE, col.names = FALSE);
   },
   warning=function(cond){
     message("Here are the warning messages:");
     message(cond)
-    write.table(cond, file = paste0("tmp/ProcessingWarnings.txt"), row.names = FALSE, col.names = FALSE);
   },
   finally={
     rm(list=ls());
@@ -31,12 +37,9 @@ tryCatch(
     print("Processing Completed...")
     beep(sound = 3);
     Sys.sleep(5)
-    quit(save = "no")
+    #quit(save = "no")
   }
 
-
 )
-  
 
-
-####END SCRIPT####
+####END SCRIPT####  

@@ -54,6 +54,6 @@ dwnld.imgs <- function(x = "tile"){
     }
   }
 };
-message("dwnld.imgs - successfully loaded")
+print("dwnld.imgs - successfully loaded")
 
 ####END SCRIPT####

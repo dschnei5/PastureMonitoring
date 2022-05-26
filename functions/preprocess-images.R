@@ -7,9 +7,9 @@
 any.zips <- function (x) {
   any(grepl("..zip$",list.files(x))==TRUE)
 };
-message("any.zips - successfully loaded!");
-sen.folds <- function (d = "Data Directory") {
-  sentinel.folds <- list.dirs(path = paste0(d,"/sentinelimages"), recursive = FALSE);
+print("any.zips - successfully loaded!");
+sen.folds <- function (ss = "Sentinel Directory") {
+  sentinel.folds <- list.dirs(path = ss, recursive = FALSE);
   sentinel.folds <- sentinel.folds[!grepl("sentinelimages_ntmosaic",sentinel.folds)];
   sentinel.dirs <- vector();
   for (i in seq_along(sentinel.folds)){
@@ -25,10 +25,10 @@ sen.folds <- function (d = "Data Directory") {
   } # END i Loop
   rm(i, sentinel.dirs.tmp, sentinel.lng, sentinel.lng2);
   message(paste(Sys.time(),"- There are", length(sentinel.dirs), "directories to pre-process.  It can take up to 40mins/tile/directory to process..."));
-  if(length(sentinel.dirs)>0) {print(sentinel.dirs)};
+  if(length(sentinel.dirs)>0) {message(sentinel.dirs)};
   return(sentinel.dirs)
 };
-message("sen.folds - successfully loaded");
+print("sen.folds - successfully loaded");
 unzip <- function(dir = "Directory", fn = "FileName") {
   comm.zip <- paste0("powershell -command Expand-Archive -Path ",paste0(dir,"/",fn)," -DestinationPath ", paste0(dir,"/unzipped"), " -Force"  );
   comm.zip <- gsub("/","\\\\",comm.zip)
@@ -38,7 +38,7 @@ unzip <- function(dir = "Directory", fn = "FileName") {
   }; #END i Loop
   rm(i);
 };
-message("unzip - successfully loaded");
+print("unzip - successfully loaded");
 sen2cor <- function(dir = "Directory"){
   files.SAFE <- list.dirs(path=paste0(dir,"/unzipped"), recursive = FALSE, full.names = TRUE);
   files.sen2cor <- list.dirs(path=paste0(dir,"/unzipped"), recursive = FALSE, full.names = FALSE);
@@ -48,7 +48,7 @@ sen2cor <- function(dir = "Directory"){
   print(paste(Sys.time(),"- File", files.sen2cor, "processed"));
   rm(comm.sen2cor,comm.zip,files.SAFE,files.zip);
 }
-message("sen2cor - successfully loaded");
+print("sen2cor - successfully loaded");
 preprocess.sentinel <- function(x) {
   #d.dir <- get("d.dir", envir = .GlobalEnv);
   files.zip <- list.files(x,pattern = "\\.zip",include.dirs = FALSE);
@@ -74,7 +74,7 @@ preprocess.sentinel <- function(x) {
     }
 
 };
-message("preprocess.sentinel - successfully loaded");
+print("preprocess.sentinel - successfully loaded");
 create.tifs <- function(x) {
   files.READY <- list.dirs(path=paste0(x,"/unzipped"), recursive = FALSE, full.names = TRUE);
   files.READY <- files.READY[grepl("MSIL2A",files.READY)];
@@ -101,24 +101,24 @@ create.tifs <- function(x) {
     rm(r1,r2,r3,r4);
     gc();
     t1 <- now();
-    print(paste(t1,"Writing RGB raster to file, this takes time..."));
+    message(paste(t1,"Writing RGB raster to file, this takes time..."));
     writeRaster(img01, file= paste0(x,"/ready/",imageryname,"_rgb.tif"), format="GTiff", overwrite=TRUE);
-    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     t1 <- now();
-    print(paste(t1,"- Converting stack to brick, this takes time..."));
+    message(paste(t1,"- Converting stack to brick, this takes time..."));
     img02 <- brick(img01);
-    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     rm(img01);
     gc();
     gc();
     t1 <- now();
-    print(paste(t1,"- Creating NDVI image, this takes time..."));
+    message(paste(t1,"- Creating NDVI image, this takes time..."));
     ndvi <- (img02[[4]] - img02[[1]]) / (img02[[4]] + img02[[1]]);
-    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     t1 <- now();
-    print(paste(t1,"Writing NDVI raster to file, this takes time..."));
+    message(paste(t1,"Writing NDVI raster to file, this takes time..."));
     writeRaster(x = ndvi,file= paste0(x,"/ready/",imageryname,"_ndvi.tif"), format = "GTiff", overwrite = TRUE);
-    print(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     out.mess <- "This file indicates that preprocessing had been performed.  It is generated to ensure that further processing is not attempted on this folder.  Please delete this file, along with the 'unzipped'; 'ready' and 'maps' folders if you wish to rerun the preprocessing loop on this raw image folder"
     write.table(out.mess, file = paste0(x,"/ProcessingCompleted.inf"), row.names = FALSE, col.names = FALSE);
     rm(t1,img02,ndvi);
@@ -127,7 +127,7 @@ create.tifs <- function(x) {
 
   }
 };
-message("create.tifs - successfully loaded");
+print("create.tifs - successfully loaded");
 preprocess.fast <- function(dirs = "Sentinel Directories Requiring Preprocessing") {
   no_cores <- detectCores();
   registerDoParallel(makeCluster(no_cores,outfile="tmp//debug_file.txt"));  #8 cores works well for quad core processor (you can set it to as many cores as you like but the process of allocating task to all the individual cores you create increases the overall processing time when you add too many - there's a sweet spot)
@@ -139,6 +139,6 @@ preprocess.fast <- function(dirs = "Sentinel Directories Requiring Preprocessing
   };
   stopImplicitCluster();
 };
-message("preprocess.fast - successfully loaded")
+print("preprocess.fast - successfully loaded")
 
 ####END SCRIPT####
