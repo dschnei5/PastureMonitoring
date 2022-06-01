@@ -70,17 +70,18 @@ delete.leftovers <- FALSE # Clean up SentinelImages in storage location to save 
 ####Email Out Settings####
 
 this_hw <- "New Imagery Available on Pastures App" # Email Subject Line
-<<<<<<< HEAD
+
 email_sender <- 'Xxxx Xxxxxxx <xxxxxxx@gmail.com>' # Name and Email address of sender
+
 optional_bcc <- 'Xxxx Xxxxxxx <xxxxxxx@gmail.com>' # Name and Email address of BCC recipient
-=======
-email_sender <- 'Dez Schneider <dez.schneider@gmail.com>' # Name and Email address of sender
-optional_bcc <- 'Dez Schneider <dschnei5@une.edu.au>' # Name and Email address of BCC recipient
->>>>>>> a980d37ba08d7f43b9e0e2933673dba2b01be80e
+
 eo.appname <- "send-mail-from-r" # GMail appname
+
 # key_set(service = eo.appname, username = "pastureapp",prompt = "Enter your GMailr Application Key")
 # key_set(service = paste0(eo.appname,"-secret"), username = "pastureapp",prompt = "Enter your GMailr Application Secret")
+
 eo.key <- key_get(service = eo.appname, username = "pastureapp") # GMail application key
+
 eo.secret <- key_get(service = paste0(eo.appname,"-secret"), username = "pastureapp") # GMail secret 
 
 ####END SCRIPT####
