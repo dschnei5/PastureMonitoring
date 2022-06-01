@@ -12,7 +12,6 @@ flog.threshold('WARNING')
 
 print("Loading user defined functions...");
 source(file = "functions/setup-4-post-processing.R");
-source(file = "functions/image-download.R")
 
 ####Execute Processing####
 

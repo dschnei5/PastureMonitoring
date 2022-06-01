@@ -51,10 +51,21 @@ cld.pc <- 5; # percentage of cloud allowed for image download (required)
 
 numdaysback <- 10; # number of days into past to look for imagery, sentinel collected every 5 days (required)
 
-pre.fast <- FALSE; # Use parallel computing to perform pre-processing (required)
+post.fast <- FALSE; # Use parallel computing to perform post-processing when running processor not interactively (required)
 
-post.fast <- FALSE; # Use parallel computing to perform post-processing (required)
+post.skip <- TRUE; #Skip previously post-processed imagery for all farms when running processor not interactively (TRUE/FALSE - required) 
 
 delete.leftovers <- FALSE # Clean up SentinelImages in storage location to save space (required)
+
+####Email Out Settings####
+
+this_hw <- "New Imagery Available on Pastures App" # Email Subject Line
+email_sender <- 'Dez Schneider <dez.schneider@gmail.com>' # Name and Email address of sender
+optional_bcc <- 'Dez Schneider <dschnei5@une.edu.au>' # Name and Email address of BCC recipient
+eo.appname <- "send-mail-from-r" # GMail appname
+# key_set(service = eo.appname, username = "pastureapp",prompt = "Enter your GMailr Application Key")
+# key_set(service = paste0(eo.appname,"-secret"), username = "pastureapp",prompt = "Enter your GMailr Application Secret")
+eo.key <- key_get(service = eo.appname, username = "pastureapp") # GMail application key
+eo.secret <- key_get(service = paste0(eo.appname,"-secret"), username = "pastureapp") # GMail secret 
 
 ####END SCRIPT####

@@ -195,6 +195,7 @@ load.pm <- function() {
   }; #End i Loop
   rm(i);
   Sys.sleep(2);
+  return(pmods.ls)
 };
 print("load.pm - successfully loaded");
 list.shp.pms <- function(x) {
@@ -514,7 +515,7 @@ process.new.farm <- function(pm = "Property Meta-Data") {
   print(paste("Your new property", property.nam, "is covered by the", img.nam, "imagery"))
   newpropertyrow$Sentinel <- img.nam;
   newpropertyrow$Shapefile <- shp.nam
-  newpropertyrow$TreeMask <- paste0("/treemask/", img.nam, "_treemask_-vesRemoved.tif");
+  newpropertyrow$TreeMask <- paste0("/treemasks/", img.nam, "_treemask_-vesRemoved.tif");
   newpropertyrow$OutLoc <- paste0("/dataout/",property.nam);
   print(paste0("Creating new output directory [",d.dir,"/dataout/",property.nam,"]"));
   dir.create(paste0(d.dir,"/dataout/",property.nam),showWarnings = TRUE, recursive = FALSE);
@@ -626,5 +627,43 @@ process.new.farm <- function(pm = "Property Meta-Data") {
   return(property.nam);
 }
 print("process.new.farm - successfully loaded");
+skip.fun <- function() {
+  con <- if(interactive()) stdin() else file('stdin');
+  print("Do you want to reprocess all imagery or skip previously processed [all/skip]");
+  skip <- scan(file = con,nlines = 1,what = 'character',quiet = TRUE);
+  rm(con)
+  skip <- tolower(skip)
+  if (skip == 'skip'| skip == 's' | skip == 'S' | skip == 'yes' | skip == 'skip them!' | skip == 'true') {
+    skip <- TRUE;
+    message("Skipping previously processed imagery for each selected property!");
+    Sys.sleep(1);
+  } else {
+    skip <- FALSE;
+    message("Reprocessing all imagery for each selected property!");
+    print("Hit [Esc] to cancel at any time")
+    Sys.sleep(1);
+  }
+  return(skip)
+};
+print("skip.fun - successfully loaded");
+fast.fun <- function() {
+  con <- if(interactive()) stdin() else file('stdin');
+  print("Do you want to parallel compute the post processing? [yes/no]");
+  fast <- scan(file = con,nlines = 1,what = 'character',quiet = TRUE);
+  rm(con)
+  fast <- tolower(fast)
+  if (fast == 'yes' | fast == 'fast'| fast == 'f' | fast == 'true') {
+    fast <- TRUE;
+    message("Parallel computing the estimates for each selected properties!");
+    Sys.sleep(1);
+  } else {
+    fast <- FALSE;
+    message("Not Parallel computing the property estimates for each selected property");
+    message("Hit [Esc] to cancel at any time")
+    Sys.sleep(1);
+  }
+  return(fast)
+};
+print("fast.fun - successfully loaded");
 }
 ####END SCRIPT####
