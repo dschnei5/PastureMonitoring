@@ -29,20 +29,34 @@ check4pw <- function(usr = "Username", ser = "Service") {
   return(psswrd)
 };
 print("check4pw - successfully loaded");
-cld.connect <- function() {
+cld.connect.d <- function() {
   print(paste("Connecting to cloud drive:", cld.dir))
   pwd <- check4pw(usr = cld.usr, ser = cld.ser.nm)
   cmd1 <- paste0("net use ",drv.l,": \\\\",cld.dir," /user:",cld.usr," ",pwd)
   system(cmd1, wait=TRUE)
   d.dir <- paste0(drv.l,":")
 };
-print("cld.connect - successfully loaded");
-cld.disconnect <- function() {
+print("cld.connect.d - successfully loaded");
+cld.connect.s <- function() {
+  print(paste("Connecting to cloud drive:", cld.s.dir))
+  pwd <- check4pw(usr = cld.s.usr, ser = cld.s.ser.nm)
+  cmd1 <- paste0("net use ",drv.l.s,": \\\\",cld.s.dir," /user:",cld.s.usr," ",pwd)
+  system(cmd1, wait=TRUE)
+  s.dir <- paste0(drv.l.s,":")
+};
+print("cld.connect.s - successfully loaded");
+cld.disconnect.d <- function() {
   print(paste("Disconnecting from cloud drive:", cld.dir))
   cmd2 <- paste0("net use ",d.dir," ", "/delete");
   system(cmd2, wait=TRUE)
 };
-print("cld.disconnect - successfully loaded");
+print("cld.disconnect.d - successfully loaded");
+cld.disconnect.s <- function() {
+  print(paste("Disconnecting from cloud drive:", cld.s.dir))
+  cmd2 <- paste0("net use ",s.dir," ", "/delete");
+  system(cmd2, wait=TRUE)
+};
+print("cld.disconnect.s - successfully loaded");
 create.dirs <- function(dir = "Data Directory") {
   dir.create(dir,showWarnings = FALSE, recursive = TRUE)
 };
@@ -195,6 +209,7 @@ load.pm <- function() {
   }; #End i Loop
   rm(i);
   Sys.sleep(2);
+  return(pmods.ls)
 };
 print("load.pm - successfully loaded");
 list.shp.pms <- function(x) {
@@ -514,7 +529,7 @@ process.new.farm <- function(pm = "Property Meta-Data") {
   print(paste("Your new property", property.nam, "is covered by the", img.nam, "imagery"))
   newpropertyrow$Sentinel <- img.nam;
   newpropertyrow$Shapefile <- shp.nam
-  newpropertyrow$TreeMask <- paste0("/treemask/", img.nam, "_treemask_-vesRemoved.tif");
+  newpropertyrow$TreeMask <- paste0("/treemasks/", img.nam, "_treemask_-vesRemoved.tif");
   newpropertyrow$OutLoc <- paste0("/dataout/",property.nam);
   print(paste0("Creating new output directory [",d.dir,"/dataout/",property.nam,"]"));
   dir.create(paste0(d.dir,"/dataout/",property.nam),showWarnings = TRUE, recursive = FALSE);
@@ -626,5 +641,43 @@ process.new.farm <- function(pm = "Property Meta-Data") {
   return(property.nam);
 }
 print("process.new.farm - successfully loaded");
+skip.fun <- function() {
+  con <- if(interactive()) stdin() else file('stdin');
+  print("Do you want to reprocess all imagery or skip previously processed [all/skip]");
+  skip <- scan(file = con,nlines = 1,what = 'character',quiet = TRUE);
+  rm(con)
+  skip <- tolower(skip)
+  if (skip == 'skip'| skip == 's' | skip == 'S' | skip == 'yes' | skip == 'skip them!' | skip == 'true') {
+    skip <- TRUE;
+    message("Skipping previously processed imagery for each selected property!");
+    Sys.sleep(1);
+  } else {
+    skip <- FALSE;
+    message("Reprocessing all imagery for each selected property!");
+    print("Hit [Esc] to cancel at any time")
+    Sys.sleep(1);
+  }
+  return(skip)
+};
+print("skip.fun - successfully loaded");
+fast.fun <- function() {
+  con <- if(interactive()) stdin() else file('stdin');
+  print("Do you want to parallel compute the post processing? [yes/no]");
+  fast <- scan(file = con,nlines = 1,what = 'character',quiet = TRUE);
+  rm(con)
+  fast <- tolower(fast)
+  if (fast == 'yes' | fast == 'fast'| fast == 'f' | fast == 'true') {
+    fast <- TRUE;
+    message("Parallel computing the estimates for each selected properties!");
+    Sys.sleep(1);
+  } else {
+    fast <- FALSE;
+    message("Not Parallel computing the property estimates for each selected property");
+    message("Hit [Esc] to cancel at any time")
+    Sys.sleep(1);
+  }
+  return(fast)
+};
+print("fast.fun - successfully loaded");
 }
 ####END SCRIPT####

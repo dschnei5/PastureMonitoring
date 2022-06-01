@@ -12,13 +12,13 @@ flog.threshold('WARNING')
 
 print("Loading user defined functions...");
 source(file = "functions/setup-4-post-processing.R");
-source(file = "functions/image-download.R")
 
 ####Execute Processing####
 
 # Setup Directories
 print("Setting up directories...");
-if (exists("cld.dir")) {d.dir <- cld.connect()};
+if (exists("cld.dir")) {d.dir <- cld.connect.d()};
+if (exists("cld.s.dir")) {s.dir <- cld.connect.s()};
 sapply(paste0(s.dir,"\\T",tiles),create.dirs)
 sapply(paste0(d.dir,"\\",c("treemasks","shapefiles","calibrationdata")),create.dirs)
 

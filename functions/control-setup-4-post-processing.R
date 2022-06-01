@@ -30,20 +30,32 @@ if (Interactive) {
   chk4mods.unavail(mods = shp.mods, kill = TRUE);
   load.propmeta();
   sapply(paste0(d.dir,"\\",c("dataout","shinyapps","emailout")),create.dirs)
-  md5 <- md5.check(dd = d.dir)
+  MD5.check1 <- md5.check(dd = d.dir)
   UCRS <- load.UCRS()
   property.nam <- which.farms(dd = d.dir);
   if ('New Property' %in% property.nam) {
     property.nam <- process.new.farm(pm = propmeta)
+    skip <- FALSE
+    fast <- fast.fun()
+  } else if ('All' %in% property.nam) {
+    property.nam <- propmeta$Property
+    skip <- skip.fun()
+    fast <- fast.fun()
+  } else {
+    skip <- skip.fun()
+    fast <- fast.fun()
   }
-  shps <- check4shapefiles(dd = d.dir);
-  
 }
 
 if (!Interactive) {
   shps <- check4shapefiles(dd = d.dir);
   md5 <- md5.check(dd = d.dir)
   UCRS <- load.UCRS()
+  load.propmeta()
+  property.nam <- propmeta$Property
+  skip <- post.skip
+  fast <- post.fast
 }
+
 
 ####END SCRIPT####

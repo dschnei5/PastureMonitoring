@@ -1,0 +1,117 @@
+INFO [2022-05-26 18:52:41] Number of cloud free images found within the last 10 days = 0
+
+
+Compact call stack:
+  1 source("C:/R/PastureMonitoring/processpasturedata.R")
+  2 processpasturedata.R#18: tryCatchLog({
+  3 processpasturedata.R#21: source(file = "functions/control-pre-processing.R")
+  4 control-pre-processing.R#14: sapply(tiles, dwnld.imgs)
+  5 preprocess-images.R#62: message(paste("Number of cloud free images found within the last", numdaysback, "days =", nu
+
+Full call stack:
+  1 source("C:/R/PastureMonitoring/processpasturedata.R")
+  2 withVisible(eval(ei, envir))
+  3 eval(ei, envir)
+  4 eval(ei, envir)
+  5 processpasturedata.R#18: tryCatchLog({
+        source(file = "functions/control-setup.R")
+        source(file = "fun
+  6 tryCatch(withCallingHandlers(expr, condition = cond.handler), ..., finally = finally)
+  7 tryCatchList(expr, classes, parentenv, handlers)
+  8 tryCatchOne(tryCatchList(expr, names[-nh], parentenv, handlers[-nh]), names[nh], parentenv, handlers[[nh]])
+  9 doTryCatch(return(expr), name, parentenv, handler)
+  10 tryCatchList(expr, names[-nh], parentenv, handlers[-nh])
+  11 tryCatchOne(expr, names, parentenv, handlers[[1]])
+  12 doTryCatch(return(expr), name, parentenv, handler)
+  13 withCallingHandlers(expr, condition = cond.handler)
+  14 processpasturedata.R#21: source(file = "functions/control-pre-processing.R")
+  15 withVisible(eval(ei, envir))
+  16 eval(ei, envir)
+  17 eval(ei, envir)
+  18 control-pre-processing.R#14: sapply(tiles, dwnld.imgs)
+  19 lapply(X = X, FUN = FUN, ...)
+  20 FUN(X[[i]], ...)
+  21 preprocess-images.R#62: message(paste("Number of cloud free images found within the last", numdaysback, "days =", nu
+  22 withRestarts({
+        signalCondition(cond)
+        defaultHandler(cond)
+    }, muffleMessage = function() NULL)
+  23 withOneRestart(expr, restarts[[1]])
+  24 doWithOneRestart(return(expr), restart)
+  25 signalCondition(cond)
+
+
+INFO [2022-05-26 18:52:43] 2022-05-26 18:52:43 - There are 0 directories to pre-process.  It can take up to 40mins/tile/directory to process...
+
+
+Compact call stack:
+  1 source("C:/R/PastureMonitoring/processpasturedata.R")
+  2 processpasturedata.R#18: tryCatchLog({
+  3 processpasturedata.R#21: source(file = "functions/control-pre-processing.R")
+  4 control-pre-processing.R#17: sen.folds(ss = s.dir)
+  5 preprocess-images.R#27: message(paste(Sys.time(), "- There are", length(sentinel.dirs), "directories to pre-process.
+
+Full call stack:
+  1 source("C:/R/PastureMonitoring/processpasturedata.R")
+  2 withVisible(eval(ei, envir))
+  3 eval(ei, envir)
+  4 eval(ei, envir)
+  5 processpasturedata.R#18: tryCatchLog({
+        source(file = "functions/control-setup.R")
+        source(file = "fun
+  6 tryCatch(withCallingHandlers(expr, condition = cond.handler), ..., finally = finally)
+  7 tryCatchList(expr, classes, parentenv, handlers)
+  8 tryCatchOne(tryCatchList(expr, names[-nh], parentenv, handlers[-nh]), names[nh], parentenv, handlers[[nh]])
+  9 doTryCatch(return(expr), name, parentenv, handler)
+  10 tryCatchList(expr, names[-nh], parentenv, handlers[-nh])
+  11 tryCatchOne(expr, names, parentenv, handlers[[1]])
+  12 doTryCatch(return(expr), name, parentenv, handler)
+  13 withCallingHandlers(expr, condition = cond.handler)
+  14 processpasturedata.R#21: source(file = "functions/control-pre-processing.R")
+  15 withVisible(eval(ei, envir))
+  16 eval(ei, envir)
+  17 eval(ei, envir)
+  18 control-pre-processing.R#17: sen.folds(ss = s.dir)
+  19 preprocess-images.R#27: message(paste(Sys.time(), "- There are", length(sentinel.dirs), "directories to pre-process.
+  20 withRestarts({
+        signalCondition(cond)
+        defaultHandler(cond)
+    }, muffleMessage = function() NULL)
+  21 withOneRestart(expr, restarts[[1]])
+  22 doWithOneRestart(return(expr), restart)
+  23 signalCondition(cond)
+
+
+ERROR [2022-05-26 18:52:47] object 'property.nam' not found
+
+Compact call stack:
+  1 source("C:/R/PastureMonitoring/processpasturedata.R")
+  2 processpasturedata.R#18: tryCatchLog({
+  3 processpasturedata.R#22: source(file = "functions/control-setup-4-post-processing.R")
+  4 control-setup-4-post-processing.R#47: .handleSimpleError(function (c) 
+
+Full call stack:
+  1 source("C:/R/PastureMonitoring/processpasturedata.R")
+  2 withVisible(eval(ei, envir))
+  3 eval(ei, envir)
+  4 eval(ei, envir)
+  5 processpasturedata.R#18: tryCatchLog({
+        source(file = "functions/control-setup.R")
+        source(file = "fun
+  6 tryCatch(withCallingHandlers(expr, condition = cond.handler), ..., finally = finally)
+  7 tryCatchList(expr, classes, parentenv, handlers)
+  8 tryCatchOne(tryCatchList(expr, names[-nh], parentenv, handlers[-nh]), names[nh], parentenv, handlers[[nh]])
+  9 doTryCatch(return(expr), name, parentenv, handler)
+  10 tryCatchList(expr, names[-nh], parentenv, handlers[-nh])
+  11 tryCatchOne(expr, names, parentenv, handlers[[1]])
+  12 doTryCatch(return(expr), name, parentenv, handler)
+  13 withCallingHandlers(expr, condition = cond.handler)
+  14 processpasturedata.R#22: source(file = "functions/control-setup-4-post-processing.R")
+  15 withVisible(eval(ei, envir))
+  16 eval(ei, envir)
+  17 eval(ei, envir)
+  18 control-setup-4-post-processing.R#47: .handleSimpleError(function (c) 
+    {
+        if (inherits(c, "condition") &&
+
+
