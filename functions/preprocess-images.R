@@ -51,7 +51,7 @@ sen2cor <- function(dir = "Directory"){
 print("sen2cor - successfully loaded");
 dwnld.imgs <- function(x = "tile"){
   pw <- check4pw(usr = cop.usr,ser = "Copernicus")
-  paste0("Checking last ", numdaysback," for imagery with <", cld.pc,"% cloud for tile ",x)
+  paste0("Checking last ", numdaysback,"days for imagery with <", cld.pc,"% cloud for tile ",x)
   query01 <- paste0("wget --no-check-certificate --user=",cop.usr," --password=",pw," --auth-no-challenge --output-document=tmp//query_results.txt \"https://scihub.copernicus.eu/dhus/search?q=",x," AND producttype:S2MSI1C AND cloudcoverpercentage:[0 TO ",cld.pc,"] AND endposition:[NOW-",numdaysback,"DAYS TO NOW]&format=json\"");
   system(query01, wait = TRUE)
   info <- jsonlite::fromJSON(txt = "tmp//query_results.txt")
@@ -59,7 +59,7 @@ dwnld.imgs <- function(x = "tile"){
   numresults1 <- info$feed$`opensearch:totalResults` 
   img.dates <- info$feed$entry$summary
   img.href <- info$feed$entry$link
-  message(paste("Number of cloud free images found within the last", numdaysback,"days =",numresults1))
+  base::message(paste("Number of",x,"cloud free images found within the last", numdaysback,"days =",numresults1))
   if (numresults1 > 0) {
     print(paste("Downloading new images for", x));
     for (i in 1:numresults1){
@@ -67,7 +67,7 @@ dwnld.imgs <- function(x = "tile"){
       UUID <- img.href[[i]][[1]][1];
       img.date <- strapplyc(strsplit(img.dates[i],",")[[1]][1],"[0-9]{4}-[0-9]{2}-[0-9]{2}", simplify = TRUE)
       wd <- getwd()
-      new.wd <- paste0(d.dir,"/SentinelImages/T",x,"/Sentinel_",img.date)
+      new.wd <- paste0(s.dir,"/T",x,"/Sentinel_",img.date)
       creationsuccess <- suppressWarnings(dir.create(new.wd,recursive = TRUE));
       if (!creationsuccess) {
         len.dir <- length(list.files(new.wd,recursive = TRUE));
@@ -85,15 +85,15 @@ dwnld.imgs <- function(x = "tile"){
         system(query02, wait = TRUE);
         setwd(wd)
         if(i<numresults1){
-          message(paste("...completed downloading",x,"image for",img.date,"moving to next image"))
+          base::message(paste("...completed downloading",x,"image for",img.date,"moving to next image"))
         } else {
-          message(paste("...completed downloading",x,"image for",img.date,"all done, moving to next tile"))
+          base::message(paste("...completed downloading",x,"image for",img.date,"all done, moving to next tile"))
         }
       } else {
         if(i<numresults1){
-          message(paste("...already had",x,"image for",img.date,"moving to next image"))
+          base::message(paste("...already had",x,"image for",img.date,"moving to next image"))
         } else {
-          message(paste("...already had",x,"image for",img.date,"all done, moving to next tile"))
+          base::message(paste("...already had",x,"image for",img.date,"all done, moving to next tile"))
         }
         
       };
@@ -153,24 +153,24 @@ create.tifs <- function(x) {
     rm(r1,r2,r3,r4);
     gc();
     t1 <- now();
-    message(paste(t1,"Writing RGB raster to file, this takes time..."));
+    base::message(paste(t1,"Writing RGB raster to file, this takes time..."));
     writeRaster(img01, file= paste0(x,"/ready/",imageryname,"_rgb.tif"), format="GTiff", overwrite=TRUE);
     message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     t1 <- now();
-    message(paste(t1,"- Converting stack to brick, this takes time..."));
+    base::message(paste(t1,"- Converting stack to brick, this takes time..."));
     img02 <- brick(img01);
-    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     rm(img01);
     gc();
     gc();
     t1 <- now();
-    message(paste(t1,"- Creating NDVI image, this takes time..."));
+    base::message(paste(t1,"- Creating NDVI image, this takes time..."));
     ndvi <- (img02[[4]] - img02[[1]]) / (img02[[4]] + img02[[1]]);
-    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     t1 <- now();
-    message(paste(t1,"Writing NDVI raster to file, this takes time..."));
+    base::message(paste(t1,"Writing NDVI raster to file, this takes time..."));
     writeRaster(x = ndvi,file= paste0(x,"/ready/",imageryname,"_ndvi.tif"), format = "GTiff", overwrite = TRUE);
-    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     out.mess <- "This file indicates that preprocessing had been performed.  It is generated to ensure that further processing is not attempted on this folder.  Please delete this file, along with the 'unzipped'; 'ready' and 'maps' folders if you wish to rerun the preprocessing loop on this raw image folder"
     write.table(out.mess, file = paste0(x,"/ProcessingCompleted.inf"), row.names = FALSE, col.names = FALSE);
     rm(t1,img02,ndvi);

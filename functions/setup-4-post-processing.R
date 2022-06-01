@@ -64,6 +64,7 @@ print("create.dirs - successfully loaded");
 check4shapefiles <- function(dd = "Data Directory") {
   shp.dir <- (paste0(dd,"/shapefiles"))
   shp.names <- list.files(path = shp.dir, pattern = ".shp", ignore.case = TRUE, full.names = FALSE)
+  shp.names <- shp.names[!grepl("shp.",shp.names)]
   req.cols <- c("PADD_NAME", "PAS_TYP")
   if (length(shp.names)==0) {
     warning("Warning: Preprocessing of available images completed but post processing won't occur...")

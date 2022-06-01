@@ -6,8 +6,6 @@
 
 print("Loading user defined functions...");
 
-source(file = "functions/cleanup-data-dirs.R");
-
 ####Execute Processing####
 
 if (Interactive) {

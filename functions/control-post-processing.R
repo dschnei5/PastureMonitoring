@@ -8,8 +8,6 @@ print("Loading user defined functions...");
 
 source(file = "functions/postprocess-images.R");
 
-source(file = "functions/app-deploy.R");
-
 ####Execute Processing####
 
 if(length(property.nam)>0 & !post.fast){
@@ -31,6 +29,9 @@ if (length(MD5.check4$filename) >= 1) {
   }
 }
 
-send.mail(Apps2GoUp)
+send.mail(Apps2GoUp);
+if (exists("cld.dir")) {
+  cld.disconnect.d()
+  cld.disconnect.s()}
 
 ####END SCRIPT####

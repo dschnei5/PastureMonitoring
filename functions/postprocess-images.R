@@ -15,7 +15,7 @@ test_intersection <- function(a,b,c){
       return(TRUE);
     },
     error=function(cond) {
-      message(paste("Shapefile doesn't intersect ndvi raster"))
+      base::message(paste("Shapefile doesn't intersect ndvi raster"))
       # Choose a return value in case of error
       return(FALSE)
     },
@@ -90,7 +90,7 @@ post.processor <- function() {
   img.dates <- image.names.dates[[2]]
   rm(image.names.dates)
   if (length(img.names) == 0) {
-      message(paste("No new imagery to process for", x, ". Moving to next property..."));
+      base::message(paste("No new imagery to process for", x, ". Moving to next property..."));
       Sys.sleep(2);
   } else {
       message(paste("There are ", length(img.dates), "images to process for", x));
@@ -448,7 +448,7 @@ app.deploy <- function(MD5.check4, av.shiny.apps) {
   master.app <- get("master.app", envir = .GlobalEnv);
   master.app2 <- sub("[$/]","",master.app)
   avail.app.accts <- get("avail.app.accts", envir = .GlobalEnv);
-  message(paste("Deploying master app:",master.app2));
+  print(paste("Deploying master app:",master.app2));
   rsconnect::deployApp(paste0(d.dir,"/ShinyApps",master.app),account = master.app.acct, forceUpdate = getOption("rsconnect.force.update.apps", TRUE));
   Apps2GoUp <- c(MD5.check4$AppFile,MD5.check4$AppFile2nd)
   Apps2GoUp <- Apps2GoUp[!duplicated(Apps2GoUp)]
@@ -471,7 +471,7 @@ send.mail <- function(Apps2GoUp) {
                        app_address = NA,
                        email_address = NA, stringsAsFactors = FALSE)
     write.csv(vars, file = paste0(d.dir,"/emailout/Variables.csv"),row.names = FALSE, sep = ",")
-    message(paste0("No email data exists in ",d.dir,"/emailout/Variables.csv.  Please insert some before next run.  Put yourself as the 1st row"))
+    base::message(paste0("No email data exists in ",d.dir,"/emailout/Variables.csv.  Please insert some before next run.  Put yourself as the 1st row"))
   }
   my_dat <- read_csv(paste0(d.dir,"/emailout/Variables.csv"))
   #dez_dat <- my_dat[grep("Dez",my_dat$firstname),]
