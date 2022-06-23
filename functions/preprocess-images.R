@@ -10,10 +10,10 @@ any.zips <- function (x) {
 print("any.zips - successfully loaded!");
 sen.folds <- function (ss = "Sentinel Directory") {
   sentinel.folds <- list.dirs(path = ss, recursive = FALSE);
-  sentinel.folds <- sentinel.folds[!grepl("sentinelimages_ntmosaic",sentinel.folds)];
+  sentinel.folds <- sentinel.folds[!grepl("NTmosaic",sentinel.folds)];
   sentinel.dirs <- vector();
   for (i in seq_along(sentinel.folds)){
-    if (length(list.dirs(sentinel.folds[i]))>1) {
+    if (length(list.dirs(sentinel.folds[i],recursive = FALSE))>=1) {
       sentinel.dirs.tmp <- list.dirs(sentinel.folds[i], recursive = FALSE);
       sentinel.lng <- unlist(lapply(sentinel.dirs.tmp,done.files));
       sentinel.dirs.tmp <- sentinel.dirs.tmp[!sentinel.lng];
@@ -23,18 +23,18 @@ sen.folds <- function (ss = "Sentinel Directory") {
       sentinel.dirs <- c(sentinel.dirs,sentinel.dirs.tmp);
     }
   } # END i Loop
-  rm(i, sentinel.dirs.tmp, sentinel.lng, sentinel.lng2);
-  message(paste(Sys.time(),"- There are", length(sentinel.dirs), "directories to pre-process.  It can take up to 40mins/tile/directory to process..."));
-  if(length(sentinel.dirs)>0) {message(sentinel.dirs)};
+  suppressWarnings(rm(i, sentinel.dirs.tmp, sentinel.lng, sentinel.lng2));
+  base::message(paste(Sys.time(),"- There are", length(sentinel.dirs), "directories to pre-process.  It can take up to 40mins/tile/directory to process..."));
+  if(length(sentinel.dirs)>0) {base::message(paste("Image:",sentinel.dirs, " ", sep = "\n"))};
   return(sentinel.dirs)
 };
 print("sen.folds - successfully loaded");
-unzip <- function(dir = "Directory", fn = "FileName") {
+unzip <- function(dir = "Directory", fn = "FileName" ) {
   comm.zip <- paste0("powershell -command Expand-Archive -Path ",paste0(dir,"/",fn)," -DestinationPath ", paste0(dir,"/unzipped"), " -Force"  );
   comm.zip <- gsub("/","\\\\",comm.zip)
   for (i in seq_along(comm.zip)){
     system(comm.zip[i], wait = TRUE);
-    print(paste(Sys.time(),"- File", files.zip[i], "unzipped"));
+    print(paste(Sys.time(),"- File", fn[i], "unzipped"));
   }; #END i Loop
   rm(i);
 };
@@ -46,7 +46,7 @@ sen2cor <- function(dir = "Directory"){
   comm.sen2cor <- gsub("/","\\\\",comm.sen2cor)
   shell(comm.sen2cor, wait = TRUE);
   print(paste(Sys.time(),"- File", files.sen2cor, "processed"));
-  rm(comm.sen2cor,comm.zip,files.SAFE,files.zip);
+  rm(comm.sen2cor,files.SAFE);
 }
 print("sen2cor - successfully loaded");
 dwnld.imgs <- function(x = "tile"){
@@ -109,22 +109,27 @@ preprocess.sentinel <- function(x) {
   suppressWarnings(dir.create(paste0(x,"/ready")));
   if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==0) {
     unzip(dir = x,fn = files.zip)
-    sen2cor(dir = x)
-    } else if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==1) {
-      unlink(list.dirs(paste0(x,"/unzipped"),recursive = FALSE,full.names = TRUE),recursive = TRUE);
+    if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==1) {
+      sen2cor(dir = x)
+    }
+  } else if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==1) {
+    unlink(list.dirs(paste0(x,"/unzipped"),recursive = FALSE,full.names = TRUE),recursive = TRUE);
+    unzip(dir = x,fn = files.zip)
+    if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==1) {
+      sen2cor(dir = x)
+    }
+  } else if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==2) {
+    files.READY <- list.dirs(path=paste0(x,"/unzipped"), recursive = FALSE, full.names = TRUE);
+    files.READY <- files.READY[grepl("MSIL2A",files.READY)];
+    files <- list.files(files.READY, pattern = "._10m.jp2$", recursive = TRUE);
+    if (length(files) < 7){
+      unlink(files.READY, recursive = TRUE);
       unzip(dir = x,fn = files.zip)
       sen2cor(dir = x)
-    } else if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==2) {
-      files.READY <- list.dirs(path=paste0(x,"/unzipped"), recursive = FALSE, full.names = TRUE);
-      files.READY <- files.READY[grepl("MSIL2A",files.READY)];
-      files <- list.files(files.READY, pattern = "._10m.jp2$", recursive = TRUE);
-      if (length(files) < 7){
-        unlink(files.READY, recursive = TRUE);
-        unzip(dir = x,fn = files.zip)
-        sen2cor(dir = x)
-      }
     }
-
+    print(paste0(x, " - Preprocessing Done"))
+  }
+  
 };
 print("preprocess.sentinel - successfully loaded");
 create.tifs <- function(x) {
@@ -155,7 +160,7 @@ create.tifs <- function(x) {
     t1 <- now();
     base::message(paste(t1,"Writing RGB raster to file, this takes time..."));
     writeRaster(img01, file= paste0(x,"/ready/",imageryname,"_rgb.tif"), format="GTiff", overwrite=TRUE);
-    message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
     t1 <- now();
     base::message(paste(t1,"- Converting stack to brick, this takes time..."));
     img02 <- brick(img01);
@@ -176,7 +181,7 @@ create.tifs <- function(x) {
     rm(t1,img02,ndvi);
     gc();
     gc();
-
+    
   }
 };
 print("create.tifs - successfully loaded");
