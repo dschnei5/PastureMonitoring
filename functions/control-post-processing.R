@@ -10,11 +10,11 @@ source(file = "functions/postprocess-images.R");
 
 ####Execute Processing####
 
-if(length(property.nam)>0 & !post.fast){
+if(length(property.nam)>0 & !fast){
   sapply(property.nam,post.processor)
 };
-if(length(property.nam)>0 & post.fast){
-  postprocess.fast()
+if(length(property.nam)>0 & fast){
+  postprocess.fast(x = property.nam)
 };
   
 av.shiny.apps <- app.update(pm = propmeta)
@@ -29,7 +29,7 @@ if (length(MD5.check4$filename) >= 1) {
   }
 }
 
-send.mail(Apps2GoUp);
+send.mail(Apps2GoUp)
 if (exists("cld.dir")) {
   cld.disconnect.d()
   cld.disconnect.s()}

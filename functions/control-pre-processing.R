@@ -24,6 +24,7 @@ if(length(sentinel.dirs)>0 & pre.fast){
 };
 
 # Clean up 
+
 gc();
 gc();
 print(paste(Sys.time(),"- Pre-processing Complete..."))

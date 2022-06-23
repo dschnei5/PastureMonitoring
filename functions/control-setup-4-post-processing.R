@@ -10,24 +10,24 @@ print("Loading user defined functions...");
 
 if (Interactive) {
   
-  message(paste0("Checking for shapefiles in: ",d.dir,"/shapefiles"));
+  base::message(paste0("Checking for shapefiles in: ",d.dir,"/shapefiles"));
   shps <- check4shapefiles(dd = d.dir);
-  message(paste0("Checking for Treemasks in: ",d.dir,"/treemasks"));
+  base::message(paste0("Checking for Treemasks in: ",d.dir,"/treemasks"));
   tm2create <- check4treemasks(dd = d.dir,ss = s.dir,t = tiles);
   if (is.null(tm2create)) {
-    message("No new treemasks required - moving on...")
+    base::message("No new treemasks required - moving on...")
   } else {
     tm2create <- select.treemasks(tm = tm2create)
     lapply(tm2create,create.treemask)
   }
-  #load.pm();
   shp.mods <- unlist(lapply(shps,list.shp.pms));
+  shp.mods <- shp.mods[!duplicated(shp.mods)];
   un.av.mods <- chk4mods.unavail(mods = shp.mods, kill = FALSE);
   print(un.av.mods);
   build.new.mods();
   chk4mods.unavail(mods = shp.mods, kill = TRUE);
   load.propmeta();
-  sapply(paste0(d.dir,"\\",c("dataout","shinyapps","emailout")),create.dirs)
+  sapply(paste0(d.dir,"/",c("dataout","shinyapps","emailout")),create.dirs)
   MD5.check1 <- md5.check(dd = d.dir)
   UCRS <- load.UCRS()
   property.nam <- which.farms(dd = d.dir);
@@ -43,6 +43,7 @@ if (Interactive) {
     skip <- skip.fun()
     fast <- fast.fun()
   }
+  print(paste("Skip =", skip, "Fast" = fast))
 }
 
 if (!Interactive) {
