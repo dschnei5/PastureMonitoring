@@ -48,7 +48,7 @@ if (Interactive) {
 
 if (!Interactive) {
   shps <- check4shapefiles(dd = d.dir);
-  md5 <- md5.check(dd = d.dir)
+  MD5.check1 <- md5.check(dd = d.dir)
   UCRS <- load.UCRS()
   load.propmeta()
   property.nam <- propmeta$Property
