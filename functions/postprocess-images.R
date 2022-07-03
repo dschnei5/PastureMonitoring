@@ -180,7 +180,6 @@
             gc();
             gc();
             
-            
           }
         } else {
           print("Success!");
@@ -429,7 +428,6 @@
     MD5.check4$AppFile2nd <- propmeta$AppFile2nd[propmeta$Property  %in%  MD5.check4$property2]
     MD5.check4$AppFile2nd <- gsub("/www/DataOut","",MD5.check4$AppFile2nd);
     return(MD5.check4)
-    
     
   }; 
   print("md5post - successfully loaded!");
