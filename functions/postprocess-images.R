@@ -477,7 +477,7 @@
                          app_name = NA,
                          app_address = NA,
                          email_address = NA, stringsAsFactors = FALSE)
-      write.csv(vars, file = paste0(d.dir,"/emailout/Variables.csv"),row.names = FALSE, sep = ",")
+      write.csv(vars, file = paste0(d.dir,"/emailout/Variables.csv"),row.names = FALSE)
       base::message(paste0("No email data exists in ",d.dir,"/emailout/Variables.csv.  Please insert some before next run.  Put yourself as the 1st row"))
     }
     my_dat <- read_csv(paste0(d.dir,"/emailout/Variables.csv"))

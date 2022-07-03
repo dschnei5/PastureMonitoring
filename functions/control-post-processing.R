@@ -9,7 +9,7 @@ print("Loading user defined functions...");
 source(file = "functions/postprocess-images.R");
 
 ####Execute Processing####
-
+base::message("Post-processing imagery for each selected farm, please wait...")
 if(length(property.nam)>0 & !fast){
   sapply(property.nam,post.processor)
 };
