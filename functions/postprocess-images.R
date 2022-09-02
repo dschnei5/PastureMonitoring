@@ -413,13 +413,14 @@
   print("postprocess.fast - successfully loaded!");
   md5post <- function(av.shiny.apps, MD5.check1) {
     GeoJSON.Files <- list.files(paste0(d.dir,"/DataOut"), recursive = TRUE, pattern = ".geojson", full.names = TRUE);
+    a <- length(strsplit(GeoJSON.Files[1], split = "/")[[1]])-2
     GeoJSON.Files.MD5 <- md5sum(files = GeoJSON.Files);
     MD5.check2 <- data.frame(filename = GeoJSON.Files,
                              MD5Checksum2 = GeoJSON.Files.MD5,
                              stringsAsFactors = FALSE);
-    MD5.check2$property2 <- gsub("_GDM_AllAvailableDates.geojson","",sapply(strsplit(MD5.check2$filename, split = "/"),"[",7));
+    MD5.check2$property2 <- gsub("_GDM_AllAvailableDates.geojson","",sapply(strsplit(MD5.check2$filename, split = "/"),"[",a));
     row.names(MD5.check2) <- 1:length(MD5.check2$filename)
-    rm(GeoJSON.Files,GeoJSON.Files.MD5); 
+    rm(a,GeoJSON.Files,GeoJSON.Files.MD5); 
     gc()
     MD5.check3 <- base::merge(MD5.check1,MD5.check2, by = "filename", all.y = TRUE )
     MD5.check4 <- MD5.check3[MD5.check3$MD5Checksum!=MD5.check3$MD5Checksum2,]

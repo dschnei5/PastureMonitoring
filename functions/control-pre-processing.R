@@ -28,7 +28,7 @@ if (Interactive){
 };
 
 # Preprocess Sentinel-1C product to 2A
-base::message("Checking what new imagery needs preprocessing with Sen2Cor...")
+base::message("Checking for new imagery that needs preprocessing with Sen2Cor...")
 sentinel.dirs <- sen.folds(ss = s.dir);
 if (Interactive){
   print("Would you like to preprocess available imagery? [yes/no]");

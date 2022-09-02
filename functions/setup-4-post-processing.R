@@ -318,13 +318,14 @@
   md5.check <- function(dd = "Data Directory") {
     GeoJSON.Files <- list.files(paste0(dd,"/DataOut"), recursive = TRUE, pattern = ".geojson", full.names = TRUE);
     if (length(GeoJSON.Files)>0) {
+      a <- length(strsplit(GeoJSON.Files[1], split = "/")[[1]])-2
       GeoJSON.Files.MD5 <- md5sum(files = GeoJSON.Files);
       MD5.check1 <- data.frame(filename = GeoJSON.Files,
                                MD5Checksum = GeoJSON.Files.MD5,
                                stringsAsFactors = FALSE);
-      MD5.check1$property <- gsub("_GDM_AllAvailableDates.geojson","",sapply(strsplit(MD5.check1$filename, split = "/"),"[",7));
+      MD5.check1$property <- gsub("_GDM_AllAvailableDates.geojson","",sapply(strsplit(MD5.check1$filename, split = "/"),"[",a));
       row.names(MD5.check1) <- 1:length(MD5.check1$filename)
-      rm(GeoJSON.Files,GeoJSON.Files.MD5);
+      rm(a,GeoJSON.Files,GeoJSON.Files.MD5);
       return(MD5.check1)
     } else {
       return(NULL)
