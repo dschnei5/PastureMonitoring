@@ -196,6 +196,132 @@ preprocess.fast <- function(dirs = "Sentinel Directories Requiring Preprocessing
   };
   stopImplicitCluster();
 };
-print("preprocess.fast - successfully loaded")
-
+print("preprocess.fast - successfully loaded");
+done.files.mos <- function (x) {
+  (any(grepl("ProcessingCompleted.inf",list.files(x))==TRUE)|any(grepl("ProcessingCompleted.txt",list.files(x))==TRUE))
+};
+print("done.files.mos - successfully loaded");
+setup.create.mosaic <- function(x) {
+  base::message("Creating Required Mosaics - Please Wait")
+  mos.inf <- read.csv(paste0(w.dir,"/settings/mosaic.csv"), header = TRUE, stringsAsFactors = FALSE)
+  sentinel.folds <- list.dirs(path = s.dir, recursive = FALSE);
+  sentinel.folds <- sentinel.folds[!apply(sapply(mos.inf$mosaic.name,function(x){grepl(x,sentinel.folds)}),1,any)]
+  
+  for (i in seq_along(mos.inf$mosaic.name)){
+    # i = 1
+    dir.create(paste0(s.dir,"/",mos.inf$mosaic.name[i]),showWarnings = FALSE);
+    mos.imgs <- paste0(s.dir,"/",strsplit(mos.inf$included.tiles[i],"-")[[1]]);
+    sentinel.folds.mos <- sentinel.folds[sentinel.folds %in% mos.imgs];
+    mos.db <- data.frame(matrix(nrow = 0,ncol = 2));
+    colnames(mos.db) <- c("Date","Image");
+    for (k in seq_along(sentinel.folds.mos)){
+      # k = 1
+      sentinel.dirs.tmp <- as.data.frame(list.dirs(sentinel.folds.mos[k], recursive = FALSE, full.names = TRUE));
+      colnames(sentinel.dirs.tmp) <- "Image"
+      sentinel.dirs.tmp$Date <- gsub(".+?[?=Sentinel_]","",sentinel.dirs.tmp$Image) # .+? will match any characters as few as possible until a "Sentinel_" is found, without counting the "Sentinel_".
+      sentinel.dirs.tmp <- sentinel.dirs.tmp[,c(2,1)]
+      mos.db <- rbind(mos.db,sentinel.dirs.tmp)
+      rm(sentinel.dirs.tmp)
+    };# END k Loop
+    mos.db <- mos.db[unlist(lapply(as.character(mos.db$Image),done.files.mos)),]
+    rm(k)
+    img.dates <- unique(mos.db$Date);
+    img.dates <- img.dates[order(img.dates)]
+    base::message(paste("Creating",length(img.dates), "mosaic images for", mos.inf$mosaic.name[i]));
+    sentinel.dirs.tmp <- list.dirs(paste0(s.dir,"/",mos.inf$mosaic.name[i]), recursive = FALSE);
+    done.dates <- as.data.frame(gsub(".+?[?=Sentinel_]","",sentinel.dirs.tmp), stringsAsFactors=FALSE);
+    colnames(done.dates) <- "Date"
+    base::message(paste("Already have", length(done.dates$Date), "done"));
+    done.dates$Dir <- sentinel.dirs.tmp;
+    done.dates$Done <- unlist(lapply(sentinel.dirs.tmp,done.files.mos));
+    done.dates$NumImgs <- NA;
+    for (j in seq_along(done.dates$Done)){
+      if(done.dates$Done[j]==TRUE){
+        done.dates$NumImgs[j] <- as.numeric(gsub("[[:space:]]","",(gsub('"',"",(grep("[0-9]",noquote(readLines(paste0(done.dates$Dir,"/ProcessingCompleted.txt")[j])),value = TRUE))))))
+      }
+    }; # End i Loop
+    rm(j);
+    done.dates <- done.dates[done.dates$Done,];
+    done.dates$NumImgs[is.na(done.dates$NumImgs)] <- 0;
+    no_cores <- detectCores();
+    registerDoParallel(makeCluster(no_cores,outfile="tmp/mosaic_parallel_debug_file.log"));
+    a2 <- seq_along(img.dates);
+    foreach(j=a2, .packages=c('raster', 'rgdal', 'sp'), .export = ls(.GlobalEnv)) %dopar% {
+      if (img.dates[j] %in% done.dates$Date) {
+        if (sum(mos.db$Date==img.dates[j],na.rm = TRUE) <= done.dates$NumImgs[done.dates$Date %in% img.dates[j]]){
+          print(paste("No new imagery for", img.dates[j], "- Not creating new mosaic"));
+        } else {
+          print(paste("New imagery available for", img.dates[j], "- Creating new mosaic"));
+          unlink(paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j]),recursive = TRUE);
+          dir.out <- paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j],"/ready");
+          dir.create(dir.out,showWarnings = FALSE, recursive = TRUE);
+          mos.imgs.tmp <- paste0(as.character(mos.db$Image[mos.db$Date==img.dates[j]]),"/ready");
+          mosaic.create(mos = mos.imgs.tmp,dir = dir.out)
+        };
+      } else {
+        dir.out <- paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j],"/ready");
+        dir.create(dir.out,showWarnings = FALSE, recursive = TRUE);
+        mos.imgs.tmp <- paste0(as.character(mos.db$Image[mos.db$Date==img.dates[j]]),"/ready");
+        mosaic.create(mos = mos.imgs.tmp,dir = dir.out)
+      };
+    };
+    stopImplicitCluster();
+  };
+};
+print("setup.create.mosaic - successfully loaded");
+mosaic.create <- function(mos = "Mosaic Images", dir = "Output Directory") {
+  ndvi.tifs <- list.files(mos);
+  ndvi.nam <- unique(ndvi.tifs[grepl("_ndvi.tif$",ndvi.tifs)]);
+  rgb.nam <- unique(ndvi.tifs[grepl("_rgb",ndvi.tifs)]);
+  ndvi.imgs <- paste0(mos,"/",ndvi.nam);
+  rgb.imgs <- paste0(mos,"/",rgb.nam);
+  dir1 <- sub("/ready","",dir)
+  if(length(ndvi.imgs)==1) {
+    #cpy <- file.copy(ndvi.imgs[1],paste0(wd,"/SentinelImages_NTmosaic/Sentinel_",img.dates[i],"/ready/",ndvi.nam))
+    sauce1 <- ndvi.imgs[1];
+    target1 <- paste0(dir,"/",ndvi.nam)
+    comm.cp1 <- paste0("powershell -command Copy-Item ",sauce1," ", target1, " -Force"  );
+    comm.cp1 <- comm.cp1 <- gsub("/","\\\\",comm.cp1)
+    copied1 <- system(comm.cp1, wait = TRUE);
+    print(paste("Copied 1 =",copied1))
+    sauce2 <- rgb.imgs[1];
+    target2 <- paste0(dir,"/",rgb.nam)
+    comm.cp2 <- paste0("powershell -command Copy-Item ",sauce2," ", target2, " -Force"  );
+    comm.cp2 <- gsub("/","\\\\",comm.cp2)
+    copied2<- system(comm.cp2, wait = TRUE);
+    print(paste("Copied 2 =",copied2))
+    if (copied1 == 0 & copied2 == 0) {
+      out.mess <- paste0("This file indicates that preprocessing had been performed.  It is generated to ensure that further processing is not attempted on this folder.  Please delete this file, along with the 'unzipped'; 'ready' and 'maps' folders if you wish to rerun the preprocessing loop on this raw image folder
+        ",length(mos));
+      write.table(out.mess, file = paste0(dir1,"/ProcessingCompleted.txt"), row.names = FALSE, col.names = FALSE);
+    };
+  } else {
+    ndvi.imgs <- lapply(ndvi.imgs, raster);
+    #names(ndvi.imgs)[1:2] <- c('x','y');
+    names(ndvi.imgs) <- NULL;
+    ndvi.imgs$fun <- mean;
+    #ndvi.imgs$tolerance <- 0.05;
+    ndvi.imgs$filename <- paste0(dir,"/",ndvi.nam);
+    ndvi.imgs$overwrite <- TRUE;
+    do.call(mosaic,ndvi.imgs);
+    rm(ndvi.imgs);
+    gc();
+    gc();
+    rgb.imgs <- lapply(rgb.imgs, raster);
+    names(rgb.imgs) <- NULL;
+    rgb.imgs$fun <- mean;
+    rgb.imgs$filename <- paste0(dir,"/",rgb.nam);
+    rgb.imgs$overwrite <- TRUE;
+    do.call(mosaic,rgb.imgs);
+    rm(rgb.imgs);
+    gc();
+    gc();
+    out.mess <- paste0("This file indicates that preprocessing had been performed.  It is generated to ensure that further processing is not attempted on this folder.  Please delete this file, along with the 'unzipped'; 'ready' and 'maps' folders if you wish to rerun the preprocessing loop on this raw image folder
+        ",length(mos));
+    write.table(out.mess, file = paste0(dir1,"/ProcessingCompleted.txt"), row.names = FALSE, col.names = FALSE);
+  }
+}
+print("mosaic.create - successfully loaded")
 ####END SCRIPT####
+
+

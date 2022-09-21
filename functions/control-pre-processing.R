@@ -58,6 +58,28 @@ if (Interactive){
   };
 };
 
+#Create Image Mosaics
+
+if (Interactive){
+  print("Would you like to create mosaics? [yes/no]");
+  con <- if (interactive()) stdin() else file('stdin');
+  mosimg <- scan(file=con, sep=',', nlines=1, what = 'character', quiet=TRUE);
+  mosimg <- tolower(mosimg)
+  if (mosimg == 'yes' | mosimg == 'y' | mosimg == 'yeah' | mosimg == 'yep' | mosimg == 'true') {
+    base::message("Creating mosaic imagery...");
+    base::message(paste("Create Mosaics Set To:",create.mosaics))
+    if (create.mosaics) {
+      setup.create.mosaic()
+    }
+  } else {
+    base::message("Skipping mosaic creation...")
+  }
+} else {
+  if (create.mosaics) {
+    setup.create.mosaic()
+  }
+} 
+
 # Clean up 
 gc();
 gc();
