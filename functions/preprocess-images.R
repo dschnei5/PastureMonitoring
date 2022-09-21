@@ -272,7 +272,7 @@ print("setup.create.mosaic - successfully loaded");
 mosaic.create <- function(mos = "Mosaic Images", dir = "Output Directory") {
   ndvi.tifs <- list.files(mos);
   ndvi.nam <- unique(ndvi.tifs[grepl("_ndvi.tif$",ndvi.tifs)]);
-  rgb.nam <- unique(ndvi.tifs[grepl("_rgb_mosaic.tif$",ndvi.tifs)]);
+  rgb.nam <- unique(ndvi.tifs[grepl("_rgb",ndvi.tifs)]);
   ndvi.imgs <- paste0(mos,"/",ndvi.nam);
   rgb.imgs <- paste0(mos,"/",rgb.nam);
   dir1 <- sub("/ready","",dir)
@@ -302,6 +302,7 @@ mosaic.create <- function(mos = "Mosaic Images", dir = "Output Directory") {
     ndvi.imgs$fun <- mean;
     #ndvi.imgs$tolerance <- 0.05;
     ndvi.imgs$filename <- paste0(dir,"/",ndvi.nam);
+    ndvi.imgs$overwrite <- TRUE;
     do.call(mosaic,ndvi.imgs);
     rm(ndvi.imgs);
     gc();
@@ -310,6 +311,7 @@ mosaic.create <- function(mos = "Mosaic Images", dir = "Output Directory") {
     names(rgb.imgs) <- NULL;
     rgb.imgs$fun <- mean;
     rgb.imgs$filename <- paste0(dir,"/",rgb.nam);
+    rgb.imgs$overwrite <- TRUE;
     do.call(mosaic,rgb.imgs);
     rm(rgb.imgs);
     gc();
@@ -321,3 +323,5 @@ mosaic.create <- function(mos = "Mosaic Images", dir = "Output Directory") {
 }
 print("mosaic.create - successfully loaded")
 ####END SCRIPT####
+
+
