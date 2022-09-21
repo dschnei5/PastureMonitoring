@@ -191,7 +191,7 @@ preprocess.fast <- function(dirs = "Sentinel Directories Requiring Preprocessing
   getDoParWorkers();
   a2 <- seq_along(dirs);
   foreach(j=a2, .packages=c('lubridate','raster', 'rgdal', 'sp'), .export = ls(.GlobalEnv)) %dopar% {
-    preprocess.sent(dirs[j])
+    preprocess.sentinel(dirs[j])
     create.tifs(dirs[j])
   };
   stopImplicitCluster();
