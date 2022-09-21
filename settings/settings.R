@@ -67,6 +67,8 @@ post.skip <- TRUE; #Skip previously post-processed imagery for all farms when ru
 
 delete.leftovers <- FALSE # Clean up SentinelImages in storage location to save space (required)
 
+create.mosaics <- FALSE # Use "TRUE" if you have farms that overlap imagery boundaries. Edit "mosaic.inf" in settings folder
+
 ####Email Out Settings####
 
 this_hw <- "New Imagery Available on Pastures App" # Email Subject Line

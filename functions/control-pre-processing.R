@@ -58,6 +58,12 @@ if (Interactive){
   };
 };
 
+#Create Image Mosaics
+base::message(paste("Create Mosaics Set To:",create.mosaics))
+if (create.mosaics) {
+  setup.create.mosaic()
+}
+
 # Clean up 
 gc();
 gc();
