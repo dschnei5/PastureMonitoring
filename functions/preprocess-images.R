@@ -253,12 +253,14 @@ setup.create.mosaic <- function(x) {
         } else {
           print(paste("New imagery available for", img.dates[j], "- Creating new mosaic"));
           unlink(paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j]),recursive = TRUE);
-          dir.create(paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j],"/ready"),showWarnings = FALSE, recursive = TRUE);
+          dir.out <- paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j],"/ready");
+          dir.create(dir.out,showWarnings = FALSE, recursive = TRUE);
           mos.imgs.tmp <- paste0(as.character(mos.db$Image[mos.db$Date==img.dates[j]]),"/ready");
           mosaic.create(mos = mos.imgs.tmp,dir = dir.out)
         };
       } else {
-        dir.create(paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j],"/ready"),showWarnings = FALSE, recursive = TRUE);
+        dir.out <- paste0(s.dir,"/",mos.inf$mosaic.name[i],"/Sentinel_",img.dates[j],"/ready");
+        dir.create(dir.out,showWarnings = FALSE, recursive = TRUE);
         mos.imgs.tmp <- paste0(as.character(mos.db$Image[mos.db$Date==img.dates[j]]),"/ready");
         mosaic.create(mos = mos.imgs.tmp,dir = dir.out)
       };
