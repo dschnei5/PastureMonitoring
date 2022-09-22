@@ -2,7 +2,7 @@
 ################################load-libraries.R######################################
 ######################################################################################
 
-list.of.packages <- c("rgdal","lubridate","raster","sp","plyr","doParallel","parallelly","geojsonio","beepr","gsubfn","stringi","tools", "keyring","jsonlite","autothresholdr","tryCatchLog","futile.logger", "gmailr","dplyr", "purrr", "readr");
+list.of.packages <- c("rgdal","lubridate","raster","sp","plyr","doParallel","parallelly","geojsonio","beepr","gsubfn","stringi","tools", "keyring","jsonlite","autothresholdr","tryCatchLog","futile.logger", "gmailr","dplyr", "purrr", "readr", "snow", "Rmpi");
 
 ####User defined functions####
 

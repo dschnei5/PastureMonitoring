@@ -187,7 +187,8 @@ create.tifs <- function(x) {
 print("create.tifs - successfully loaded");
 preprocess.fast <- function(dirs = "Sentinel Directories Requiring Preprocessing") {
   no_cores <- availableCores();
-  c0 <- makeCluster(no_cores,outfile="tmp/pre_parallel_debug_file.log", type = "MPI")
+  if (!is.na(max.cores)) {no_cores <- max.cores}
+  c0 <- makeCluster(no_cores,outfile="tmp/pre_parallel_debug_file.log")
   registerDoParallel(c0);  #8 cores works well for quad core processor (you can set it to as many cores as you like but the process of allocating task to all the individual cores you create increases the overall processing time when you add too many - there's a sweet spot)
   autoStopCluster(c0);
   getDoParWorkers();
@@ -248,7 +249,8 @@ setup.create.mosaic <- function(x) {
     done.dates <- done.dates[done.dates$Done,];
     done.dates$NumImgs[is.na(done.dates$NumImgs)] <- 0;
     no_cores <- availableCores();
-    c1 <- makeCluster(no_cores,outfile="tmp/mosaic_parallel_debug_file.log",type = "MPI")
+    if (!is.na(max.cores)) {no_cores <- max.cores}
+    c1 <- makeCluster(no_cores,outfile="tmp/mosaic_parallel_debug_file.log")
     registerDoParallel(c1);
     autoStopCluster(c1)
     a2 <- seq_along(img.dates);
