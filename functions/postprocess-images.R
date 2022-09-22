@@ -405,7 +405,8 @@
   }; ####NOT IMPLEMENTED YET####
   postprocess.fast <- function(x) {
     no_cores <- availableCores();
-    c2 <- makeCluster(no_cores,outfile="tmp/post_parallel_debug_file.log", type = "MPI")
+    if (!is.na(max.cores)) {no_cores <- max.cores}
+    c2 <- parallel::makeCluster(no_cores,outfile="tmp/post_parallel_debug_file.log")
     registerDoParallel(c2);  #8 cores works well for quad core processor (you can set it to as many cores as you like but the process of allocating task to all the individual cores you create increases the overall processing time when you add too many - there's a sweet spot)
     autoStopCluster(c2);
     getDoParWorkers();

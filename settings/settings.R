@@ -69,6 +69,8 @@ delete.leftovers <- FALSE # Clean up SentinelImages in storage location to save 
 
 create.mosaics <- FALSE # Use "TRUE" if you have farms that overlap imagery boundaries. Edit "mosaic.inf" in settings folder
 
+max.cores <- NA; # Set numeric to limit number of parallel compute cores used for pre and post processing, NA available cores are detected
+
 ####Email Out Settings####
 
 this_hw <- "New Imagery Available on Pastures App" # Email Subject Line
