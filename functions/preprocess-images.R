@@ -186,15 +186,19 @@ create.tifs <- function(x) {
 };
 print("create.tifs - successfully loaded");
 preprocess.fast <- function(dirs = "Sentinel Directories Requiring Preprocessing") {
-  no_cores <- detectCores();
-  registerDoParallel(makeCluster(no_cores,outfile="tmp/pre_parallel_debug_file.log"));  #8 cores works well for quad core processor (you can set it to as many cores as you like but the process of allocating task to all the individual cores you create increases the overall processing time when you add too many - there's a sweet spot)
+  no_cores <- availableCores();
+  c0 <- makeCluster(no_cores,outfile="tmp/pre_parallel_debug_file.log", type = "MPI")
+  registerDoParallel(c0);  #8 cores works well for quad core processor (you can set it to as many cores as you like but the process of allocating task to all the individual cores you create increases the overall processing time when you add too many - there's a sweet spot)
+  autoStopCluster(c0);
   getDoParWorkers();
   a2 <- seq_along(dirs);
   foreach(j=a2, .packages=c('lubridate','raster', 'rgdal', 'sp'), .export = ls(.GlobalEnv)) %dopar% {
     preprocess.sentinel(dirs[j])
     create.tifs(dirs[j])
   };
-  stopImplicitCluster();
+  stopCluster(c0);
+  gc();
+  gc();
 };
 print("preprocess.fast - successfully loaded");
 done.files.mos <- function (x) {
@@ -243,8 +247,10 @@ setup.create.mosaic <- function(x) {
     rm(j);
     done.dates <- done.dates[done.dates$Done,];
     done.dates$NumImgs[is.na(done.dates$NumImgs)] <- 0;
-    no_cores <- detectCores();
-    registerDoParallel(makeCluster(no_cores,outfile="tmp/mosaic_parallel_debug_file.log"));
+    no_cores <- availableCores();
+    c1 <- makeCluster(no_cores,outfile="tmp/mosaic_parallel_debug_file.log",type = "MPI")
+    registerDoParallel(c1);
+    autoStopCluster(c1)
     a2 <- seq_along(img.dates);
     foreach(j=a2, .packages=c('raster', 'rgdal', 'sp'), .export = ls(.GlobalEnv)) %dopar% {
       if (img.dates[j] %in% done.dates$Date) {
@@ -265,7 +271,9 @@ setup.create.mosaic <- function(x) {
         mosaic.create(mos = mos.imgs.tmp,dir = dir.out)
       };
     };
-    stopImplicitCluster();
+    stopCluster(c1);
+    gc();
+    gc();
   };
 };
 print("setup.create.mosaic - successfully loaded");

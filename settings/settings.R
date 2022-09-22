@@ -2,7 +2,7 @@
 ###################################settings.R#########################################
 ######################################################################################
 
-Interactive <- FALSE # Set TRUE for: 
+Interactive <- TRUE # Set TRUE for: 
                     # - the 1st run ever on this machine
                     # - adding new shapefiles  
                     # - selecting individual properties to process

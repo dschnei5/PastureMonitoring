@@ -87,6 +87,7 @@
     out.dir <- paste0(d.dir,propmeta.i$OutLoc);
     if (!dir.exists(paste0(out.dir,"/GeoJson"))) {suppressWarnings(dir.create(paste0(out.dir,"/GeoJson"),recursive = TRUE))};
     image.names.dates <- img.nms.dtes(propmeta, x, out.dir,skip = skip);
+    ####INSERT CALL TO FUNCTION FOR SELECTING CERTAIN IMAGERY ONLY HERE#### 
     img.names <- image.names.dates[[1]]
     img.dates <- image.names.dates[[2]]
     rm(image.names.dates)
@@ -332,6 +333,9 @@
     gc();
   }
   print("post.processor - successfully loaded!");
+  select.imgs.only <- function(propmeta = "Propmeta",imndts = "image.names.dates") {
+    
+  };  ####NOT IMPLEMENTED YET####
   make.maps <- function() {
     colfunc <- colorRampPalette(c("#DD0000","#DA6500","#D7C900","#7FD500","#1BD200","#00D045","#00CDA4","#0094CB","#0035C8","#2700C6"));
     col.50 <- colfunc(50);
@@ -400,15 +404,18 @@
     
   }; ####NOT IMPLEMENTED YET####
   postprocess.fast <- function(x) {
-    
-    no_cores <- detectCores();
-    registerDoParallel(makeCluster(no_cores,outfile="tmp/post_parallel_debug_file.log"));  #8 cores works well for quad core processor (you can set it to as many cores as you like but the process of allocating task to all the individual cores you create increases the overall processing time when you add too many - there's a sweet spot)
+    no_cores <- availableCores();
+    c2 <- makeCluster(no_cores,outfile="tmp/post_parallel_debug_file.log", type = "MPI")
+    registerDoParallel(c2);  #8 cores works well for quad core processor (you can set it to as many cores as you like but the process of allocating task to all the individual cores you create increases the overall processing time when you add too many - there's a sweet spot)
+    autoStopCluster(c2);
     getDoParWorkers();
     foreach(r = seq_along(x), .packages=c('lubridate','raster', 'rgdal','plyr','doParallel','gsubfn'), .export = c(ls(.GlobalEnv))) %dopar% {
       pn <- x[[r]]
       post.processor(pn)
     };
-    stopImplicitCluster();
+    stopCluster(c2);
+    gc();
+    gc();
   };
   print("postprocess.fast - successfully loaded!");
   md5post <- function(av.shiny.apps, MD5.check1) {
