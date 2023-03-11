@@ -467,11 +467,13 @@
     Apps2GoUp <- c(MD5.check4$AppFile,MD5.check4$AppFile2nd)
     Apps2GoUp <- Apps2GoUp[!duplicated(Apps2GoUp)]
     Apps2GoUp <- Apps2GoUp[!grepl(paste0(master.app2),Apps2GoUp)];
-    av.shiny.apps <- av.shiny.apps[av.shiny.apps$AppFile  %in%  Apps2GoUp,]
+    Apps2GoUp <- Apps2GoUp[!is.na(Apps2GoUp)]
+    av.shiny.apps <- av.shiny.apps[paste0("/shinyapps/",av.shiny.apps$AppFile)  %in%  Apps2GoUp,]
+    av.shiny.apps <- av.shiny.apps[!duplicated(av.shiny.apps$AppFile),]
     for (l in seq_along(av.shiny.apps$AppFile)){
       print(paste("Deploying app", (l+1), "of", length(av.shiny.apps$AppFile)+1));
       Sys.sleep(1);
-      rsconnect::deployApp(paste0(d.dir,av.shiny.apps$AppFile[l]),account = av.shiny.apps$ShinyAppAccnt[l], forceUpdate = getOption("rsconnect.force.update.apps", TRUE));
+      rsconnect::deployApp(paste0(d.dir,"/shinyapps/",av.shiny.apps$AppFile[l]),account = av.shiny.apps$ShinyAppAccnt[l], forceUpdate = getOption("rsconnect.force.update.apps", TRUE));
     };# END l loop
     return(Apps2GoUp)
   };
