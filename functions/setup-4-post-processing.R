@@ -51,13 +51,13 @@
   print("cld.connect.s - successfully loaded");
   cld.disconnect.d <- function() {
     print(paste("Disconnecting from cloud drive:", cld.dir))
-    cmd2 <- paste0("net use ",d.dir," ", "/delete");
+    cmd2 <- paste0("net use ",sub("/","",d.dir)," ", "/delete");
     system(cmd2, wait=TRUE)
   };
   print("cld.disconnect.d - successfully loaded");
   cld.disconnect.s <- function() {
     print(paste("Disconnecting from cloud drive:", cld.s.dir))
-    cmd2 <- paste0("net use ",s.dir," ", "/delete");
+    cmd2 <- paste0("net use ",sub("/","",s.dir)," ", "/delete");
     system(cmd2, wait=TRUE)
   };
   print("cld.disconnect.s - successfully loaded");
