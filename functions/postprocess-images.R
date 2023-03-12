@@ -489,10 +489,10 @@
       write.csv(vars, file = paste0(d.dir,"/emailout/Variables.csv"),row.names = FALSE)
       base::message(paste0("No email data exists in ",d.dir,"/emailout/Variables.csv.  Please insert some before next run.  Put yourself as the 1st row"))
     }
-    my_dat <- read_csv(paste0(d.dir,"/emailout/Variables.csv"))
+    my_dat <- read_csv(paste0(d.dir,"/emailout/Variables.csv"), show_col_types = FALSE)
     #dez_dat <- my_dat[grep("Dez",my_dat$firstname),]
     dez_dat <- my_dat[1,]
-    my_dat <- my_dat[tolower(paste0("/ShinyApps/",unlist(lapply(strsplit(my_dat$app_address,split = "/"), "[",4)))) %in% tolower(Apps2GoUp),]
+    my_dat <- my_dat[tolower(paste0("/shinyapps/",unlist(lapply(strsplit(my_dat$app_address,split = "/"), "[",4)))) %in% tolower(Apps2GoUp),]
     my_dat <- rbind(dez_dat,my_dat)
     body <- "G'day, %s.
 
@@ -514,7 +514,7 @@ Dez.
     emails <- edat %>%
       pmap(mime)
     str(emails, max.level = 2, list.len = 2)
-    suppressWarnings(use_secret_file(paste0(d.dta,"/emailout/client_secret.json")))
+    suppressWarnings(use_secret_file(paste0(d.dir,"/emailout/client_secret.json")))
     gm_auth_configure(key=eo.key,secret=eo.secret,path = paste0(d.dir,"/emailout/client_secret.json"), appname = eo.appname)
     safe_send_message <- safely(send_message)
     sent_mail <- emails %>%
