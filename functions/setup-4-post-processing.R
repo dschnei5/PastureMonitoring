@@ -69,6 +69,8 @@
     shp.dir <- (paste0(dd,"/shapefiles"))
     shp.names <- list.files(path = shp.dir, pattern = ".shp", ignore.case = TRUE, full.names = FALSE)
     shp.names <- shp.names[!grepl("shp.",shp.names)]
+    shp.rda.names <- list.files(path = shp.dir, pattern = ".rda", ignore.case = TRUE, full.names = FALSE)
+    rda.names <- gsub(".rda","",shp.rda.names,ignore.case = TRUE)
     req.cols <- c("PADD_NAME", "PAS_TYP")
     if (length(shp.names)==0) {
       warning("Warning: Preprocessing of available images completed but post processing won't occur...")
@@ -77,21 +79,35 @@
       shps <- list()
       for (i in seq_along(shp.names)){
         shp <- gsub(".shp","",shp.names[i],ignore.case = TRUE)
-        boundary1 <- suppressWarnings(readOGR(shp.dir,shp));
-        if (req.cols[1] %in% names(boundary1@data) & req.cols[2] %in% names(boundary1@data)) {
-          shps <- c(shps,boundary1)
+        if (shp %in% rda.names) {
+          shp.rda <- shp.rda.names[grepl(paste0(shp,".rda"),shp.rda.names)]
+          fn <- paste0(shp.dir,"//",shp.rda)
+          load(fn)
+          shps <- c(shps,get(gsub(".rda","",shp.rda,ignore.case = TRUE)))
           a <- length(shps)
           names(shps) <- c(names(shps)[-a],shp)
+          rm(list = gsub(".rda","",shp.rda,ignore.case = TRUE))
         } else {
-          warning(paste0("Warning: Shapefile ", shp, " didn't have the required columns so was skipped..." ))
+          boundary1 <- suppressWarnings(readOGR(shp.dir,shp));
+          if (req.cols[1] %in% names(boundary1@data) & req.cols[2] %in% names(boundary1@data)) {
+            shps <- c(shps,boundary1)
+            a <- length(shps)
+            names(shps) <- c(names(shps)[-a],shp)
+            assign(names(shps[a]),boundary1)
+            save(list = names(shps[a]),file = paste0(shp.dir,"//",names(shps[a]),".rda"))
+            rm(list = names(shps[a]))
+            rm(boundary1)
+          } else {
+            warning(paste0("Warning: Shapefile ", shp, " didn't have the required columns so was skipped..." ))
+          }
         }
+
       }
       if (length(shps)==0) {
         warning("Warning: Preprocessing of available images completed but post processing won't occur...")
         stop(paste0("No Shapefiles with correct columns available, please add at least one to: ", d.dir,"/shapefiles"))
-      } else {
-        return(shps)
       }
+        return(shps)
     }
   };
   print("check4shapefiles - successfully loaded");
