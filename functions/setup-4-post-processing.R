@@ -621,7 +621,7 @@
       app.no <- scan(file=con, sep=',', nlines=1, what = 'integer', quiet=TRUE);
       app.no <- as.numeric(app.no);
       newpropertyrow$ShinyAppAccnt <- avail.app.accts[app.no];} # Which App Acct?
-    rm(con,i,app.no,im.no,im.freq,log.ls,log.no,new.app.name,img.nam,avshp.ls);
+    rm(con,i,app.no,im.no,im.freq,log.ls,log.no,img.nam,avshp.ls);
     gc();
     gc();
     newpropertyrow$ShinyAppAccnt2nd <- NA
