@@ -409,7 +409,12 @@
       }
     }
     rm(i)
-    if (length(img.ls) < 1) {
+    
+    tm.list <- list.files(paste0(dd,"/treemasks/"), pattern = ".tif$")
+    tm.list <- gsub("_treemask_-vesRemoved.tif","",tm.list)
+    img.ls <- img.ls[img.ls %in% tm.list]
+    
+           if (length(img.ls) < 1) {
       warning(paste("Sentinel Images not found at",img.loc));
       Sys.sleep(2);
       warning("No processed imagery found
@@ -451,7 +456,7 @@
       rm(int.lay.no,con)
     }
     if (length(int.lay)==0) {
-      warning("Sorry, your shapefile didn't overlap any imagery.  
+      warning("Sorry, your shapefile didn't overlap any imagery or you havent created a treemask for that tile yet.
             Please download some and create a corresponding tree mask before retrying...");
       print("Script will autoclose in 10secs...")
       Sys.sleep(10);
