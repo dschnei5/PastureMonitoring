@@ -95,7 +95,7 @@
       base::message(paste("No new imagery to process for", x, ". Moving to next property..."));
       Sys.sleep(2);
     } else {
-      base::message(paste("There are ", length(img.dates), "images to process for", x));
+      base::message(paste("There are", length(img.dates), "images to process for", x));
       boundary1 <- shps[grepl(propmeta.i$Shapefile,names(shps))][[1]];
       crs(boundary1) <- UCRS[[propmeta.i$CRS.no]];
       dta.out.full <- data.frame(aPADD_NAME = boundary1@data$PADD_NAME);
@@ -327,7 +327,7 @@
       
     }
     base::message(paste("Done - Time Elapsed =", time_length(Sys.time() - t1), "seconds"));
-    print("All selected properties successfully updated moving on to deploying apps")
+    print(paste("All new images for",x,"successfully processed moving on to app deploy"));
     if (exists("dta.out.full")) {rm(dta.out.full)}
     gc();
     gc();
@@ -431,6 +431,8 @@
     rm(a,GeoJSON.Files,GeoJSON.Files.MD5); 
     gc()
     MD5.check3 <- base::merge(MD5.check1,MD5.check2, by = "filename", all.y = TRUE )
+    MD5.check3$MD5Checksum <- ifelse(is.na(MD5.check3$MD5Checksum),"MD5.check3$MD5Checksum2",MD5.check3$MD5Checksum)
+    MD5.check3$property <- ifelse(is.na(MD5.check3$property),MD5.check3$property2,MD5.check3$property)
     MD5.check4 <- MD5.check3[MD5.check3$MD5Checksum!=MD5.check3$MD5Checksum2,]
     MD5.check4$AppFile <- propmeta$AppFile[propmeta$Property  %in%  MD5.check4$property2]
     MD5.check4$AppFile <- gsub("/www/DataOut","",MD5.check4$AppFile);
