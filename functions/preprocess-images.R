@@ -13,11 +13,14 @@ sen.folds <- function (ss = "Sentinel Directory") {
   sentinel.folds <- sentinel.folds[!grepl("NTmosaic",sentinel.folds)];
   sentinel.dirs <- vector();
   for (i in seq_along(sentinel.folds)){
+    base::message(paste("Checking folder", i, "of", length(sentinel.folds), "Folder:", sentinel.folds[i]))
     if (length(list.dirs(sentinel.folds[i],recursive = FALSE))>=1) {
       sentinel.dirs.tmp <- list.dirs(sentinel.folds[i], recursive = FALSE);
-      sentinel.lng <- unlist(lapply(sentinel.dirs.tmp,done.files));
+      base::message("Checking for previously completed files")
+      sentinel.lng <- unlist(pblapply(sentinel.dirs.tmp,done.files));
       sentinel.dirs.tmp <- sentinel.dirs.tmp[!sentinel.lng];
-      sentinel.lng2 <- unlist(lapply(sentinel.dirs.tmp,any.zips));
+      base::message("Checking For Zipped Files")
+      sentinel.lng2 <- unlist(pblapply(sentinel.dirs.tmp,any.zips));
       sentinel.dirs.tmp <- sentinel.dirs.tmp[sentinel.lng2];
       sentinel.dirs.tmp <- sentinel.dirs.tmp[grepl("Sentinel_",sentinel.dirs.tmp)];
       sentinel.dirs <- c(sentinel.dirs,sentinel.dirs.tmp);
