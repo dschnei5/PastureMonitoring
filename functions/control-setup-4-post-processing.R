@@ -43,7 +43,7 @@ if (Interactive) {
     skip <- skip.fun()
     fast <- fast.fun()
   }
-  print(paste("Skip =", skip, "Fast" = fast))
+  print(paste("Skip =", skip, ", Fast =", fast))
 }
 
 if (!Interactive) {
