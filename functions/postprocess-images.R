@@ -169,7 +169,7 @@
               dta.out$GDM[q] <- dta.out[q,p]
             }; #END q loop
             rm(q,p,ind.no);
-            dta.out$GDM_ADJ <- dta.out$GDM;
+            dta.out$GDM_ADJ <- dta.out$GDM * 1.75 # Post 1 Jan 2022 harmonisation fix; 
             dta.out2 <- dta.out[c(1,length(names(dta.out)))];
             colnames(dta.out2) <- c(paste0( "Sent_NDVI_",img.dates[i]),paste0("GDM_Est_",img.dates[i]));
             dta.out.full <- cbind(dta.out.full,dta.out2);
