@@ -27,11 +27,10 @@ if (length(MD5.check4$filename) >= 1) {
   print("No Shiny Apps Required Updating")
   Sys.sleep(3)
   }
-}
 
 send.mail(Apps2GoUp)
 if (exists("cld.dir")) {
   cld.disconnect.d()
   cld.disconnect.s()}
-
+}
 ####END SCRIPT####
