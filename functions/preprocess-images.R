@@ -161,30 +161,35 @@ create.tifs <- function(x) {
     rm(r1,r2,r3,r4);
     gc();
     t1 <- now();
-    base::message(paste(t1,"Writing RGB raster to file, this takes time..."));
-    writeRaster(img01, file= paste0(x,"/ready/",imageryname,"_rgb.tif"), format="GTiff", overwrite=TRUE);
-    base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
-    t1 <- now();
     base::message(paste(t1,"- Converting stack to brick, this takes time..."));
-    img02 <- brick(img01);
+    img01 <- brick(img01)
     base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
-    rm(img01);
-    gc();
-    gc();
-    t1 <- now();
-    base::message(paste(t1,"- Creating NDVI image, this takes time..."));
-    ndvi <- (img02[[4]] - img02[[1]]) / (img02[[4]] + img02[[1]]);
-    base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
-    t1 <- now();
-    base::message(paste(t1,"Writing NDVI raster to file, this takes time..."));
-    writeRaster(x = ndvi,file= paste0(x,"/ready/",imageryname,"_ndvi.tif"), format = "GTiff", overwrite = TRUE);
-    base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
-    out.mess <- "This file indicates that preprocessing had been performed.  It is generated to ensure that further processing is not attempted on this folder.  Please delete this file, along with the 'unzipped'; 'ready' and 'maps' folders if you wish to rerun the preprocessing loop on this raw image folder"
-    write.table(out.mess, file = paste0(x,"/ProcessingCompleted.inf"), row.names = FALSE, col.names = FALSE);
-    rm(t1,img02,ndvi);
-    gc();
-    gc();
-    
+    filename.rgb <- paste0(x,"/ready/",imageryname,"_rgb.tif");
+    if (!file.exists(filename.rgb) | file.size(filename.rgb) < 1000 ) {
+      t1 <- now();
+      base::message(paste(t1,"Writing RGB raster to file, this takes time..."));
+      writeRaster(img01, file= filename.rgb, format="GTiff", overwrite=TRUE)
+      base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"))
+      };
+    filename.ndvi <- paste0(x,"/ready/",imageryname,"_ndvi.tif")
+    if (!file.exists(filename.ndvi) | file.size(filename.ndvi) < 1000) {
+      t1 <- now();
+      base::message(paste(t1,"- Creating NDVI image, this takes time..."));
+      ndvi <- (img01[[4]] - img01[[1]]) / (img01[[4]] + img01[[1]]);
+      base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+      t1 <- now();
+      base::message(paste(t1,"Writing NDVI raster to file, this takes time..."));
+      writeRaster(x = ndvi,file= paste0(x,"/ready/",imageryname,"_ndvi.tif"), format = "GTiff", overwrite = TRUE);
+      base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+      }
+    rm(t1,im01,ndvi)
+    gc()
+    gc()
+    if (file.exists(filename.rgb) & file.exists(filename.ndvi)) {
+      out.mess <- "This file indicates that preprocessing had been performed.  It is generated to ensure that further processing is not attempted on this folder.  Please delete this file, along with the 'unzipped'; 'ready' and 'maps' folders if you wish to rerun the preprocessing loop on this raw image folder"
+      write.table(out.mess, file = paste0(x,"/ProcessingCompleted.inf"), row.names = FALSE, col.names = FALSE);
+    }
+
   }
 };
 print("create.tifs - successfully loaded");
