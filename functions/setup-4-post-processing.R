@@ -30,34 +30,46 @@
   };
   print("check4pw - successfully loaded");
   cld.connect.d <- function() {
-    print(paste("Connecting to cloud drive:", cld.dir))
-    pwd <- check4pw(usr = cld.usr, ser = cld.ser.nm)
-    cmd0 <- paste0("net use ",drv.l,": ","/delete")
-    system(cmd0, wait=TRUE)
-    cmd1 <- paste0("net use ",drv.l,": \\\\",cld.dir," /user:",cld.usr," ",pwd)
-    system(cmd1, wait=TRUE)
-    d.dir <- paste0(drv.l,":/")
+    print(paste("Mounting cloud drive:", cld.dir))
+    # For Linux: using mount command with SMB/CIFS
+    # Ensure mount point exists
+    system(paste0("mkdir -p ", cld.mnt.pt), wait=TRUE)
+    # Mount SMB share (adjust as needed for your setup)
+    cmd1 <- paste0("sudo mount -t cifs //", cld.dir, " ", cld.mnt.pt, " -o username=", cld.usr)
+    result <- system(cmd1, wait=TRUE)
+    if (result == 0) {
+      d.dir <- cld.mnt.pt
+    } else {
+      print("Failed to mount cloud drive")
+    }
+    return(d.dir)
   };
   print("cld.connect.d - successfully loaded");
   cld.connect.s <- function() {
-    print(paste("Connecting to cloud drive:", cld.s.dir))
-    pwd <- check4pw(usr = cld.s.usr, ser = cld.s.ser.nm)
-    cmd0 <- paste0("net use ",drv.l.s,": ","/delete")
-    system(cmd0, wait=TRUE)
-    cmd1 <- paste0("net use ",drv.l.s,": \\\\",cld.s.dir," /user:",cld.s.usr," ",pwd)
-    system(cmd1, wait=TRUE)
-    s.dir <- paste0(drv.l.s,":/")
+    print(paste("Mounting cloud drive:", cld.s.dir))
+    # For Linux: using mount command with SMB/CIFS
+    # Ensure mount point exists
+    system(paste0("mkdir -p ", cld.mnt.pt.s), wait=TRUE)
+    # Mount SMB share (adjust as needed for your setup)
+    cmd1 <- paste0("sudo mount -t cifs //", cld.s.dir, " ", cld.mnt.pt.s, " -o username=", cld.s.usr)
+    result <- system(cmd1, wait=TRUE)
+    if (result == 0) {
+      s.dir <- cld.mnt.pt.s
+    } else {
+      print("Failed to mount Sentinel cloud drive")
+    }
+    return(s.dir)
   };
   print("cld.connect.s - successfully loaded");
   cld.disconnect.d <- function() {
-    print(paste("Disconnecting from cloud drive:", cld.dir))
-    cmd2 <- paste0("net use ",sub("/","",d.dir)," ", "/delete");
+    print(paste("Unmounting cloud drive:", cld.dir))
+    cmd2 <- paste0("sudo umount ", cld.mnt.pt);
     system(cmd2, wait=TRUE)
   };
   print("cld.disconnect.d - successfully loaded");
   cld.disconnect.s <- function() {
-    print(paste("Disconnecting from cloud drive:", cld.s.dir))
-    cmd2 <- paste0("net use ",sub("/","",s.dir)," ", "/delete");
+    print(paste("Unmounting cloud drive:", cld.s.dir))
+    cmd2 <- paste0("sudo umount ", cld.mnt.pt.s);
     system(cmd2, wait=TRUE)
   };
   print("cld.disconnect.s - successfully loaded");

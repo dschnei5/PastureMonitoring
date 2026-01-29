@@ -33,32 +33,34 @@ sen.folds <- function (ss = "Sentinel Directory") {
 };
 print("sen.folds - successfully loaded");
 unzip <- function(dir = "Directory", fn = "FileName" ) {
-  comm.zip <- paste0("powershell -command Expand-Archive -Path ",paste0(dir,"/",fn)," -DestinationPath ", paste0(dir,"/unzipped"), " -Force"  );
-  comm.zip <- gsub("/","\\\\",comm.zip)
-  for (i in seq_along(comm.zip)){
-    system(comm.zip[i], wait = TRUE);
+  # For Linux: using unzip command
+  for (i in seq_along(fn)){
+    comm.zip <- paste0("unzip -q -o ", dir, "/", fn[i], " -d ", dir, "/unzipped");
+    system(comm.zip, wait = TRUE);
     print(paste(Sys.time(),"- File", fn[i], "unzipped"));
   }; #END i Loop
   rm(i);
 };
 print("unzip - successfully loaded");
 sen2cor <- function(dir = "Directory"){
+  # For Linux: using L2A_Process.py script
   files.SAFE <- list.dirs(path=paste0(dir,"/unzipped"), recursive = FALSE, full.names = TRUE);
   files.sen2cor <- list.dirs(path=paste0(dir,"/unzipped"), recursive = FALSE, full.names = FALSE);
-  comm.sen2cor <- paste0("L2A_Process.bat ",files.SAFE);
-  comm.sen2cor <- gsub("/","\\\\",comm.sen2cor)
-  shell(comm.sen2cor, wait = TRUE);
-  print(paste(Sys.time(),"- File", files.sen2cor, "processed"));
-  rm(comm.sen2cor,files.SAFE);
+  for (i in seq_along(files.SAFE)) {
+    comm.sen2cor <- paste0("L2A_Process.py ", files.SAFE[i]);
+    system(comm.sen2cor, wait = TRUE);
+    print(paste(Sys.time(),"- File", files.sen2cor[i], "processed"));
+  }
+  rm(files.SAFE);
 }
 print("sen2cor - successfully loaded");
 dwnld.imgs <- function(x = "tile"){
   pw <- check4pw(usr = cop.usr,ser = "Copernicus")
   paste0("Checking last ", numdaysback,"days for imagery with <", cld.pc,"% cloud for tile ",x)
-  query01 <- paste0("wget --no-check-certificate --user=",cop.usr," --password=",pw," --auth-no-challenge --output-document=tmp//query_results.txt \"https://scihub.copernicus.eu/dhus/search?q=",x," AND producttype:S2MSI1C AND cloudcoverpercentage:[0 TO ",cld.pc,"] AND endposition:[NOW-",numdaysback,"DAYS TO NOW]&format=json\"");
+  query01 <- paste0("wget --no-check-certificate --user=",cop.usr," --password=",pw," --auth-no-challenge --output-document=tmp/query_results.txt \"https://scihub.copernicus.eu/dhus/search?q=",x," AND producttype:S2MSI1C AND cloudcoverpercentage:[0 TO ",cld.pc,"] AND endposition:[NOW-",numdaysback,"DAYS TO NOW]&format=json\"");
   system(query01, wait = TRUE)
-  info <- jsonlite::fromJSON(txt = "tmp//query_results.txt")
-  unlink("tmp//query_results.txt")
+  info <- jsonlite::fromJSON(txt = "tmp/query_results.txt")
+  unlink("tmp/query_results.txt")
   numresults1 <- info$feed$`opensearch:totalResults` 
   img.dates <- info$feed$entry$summary
   img.href <- info$feed$entry$link
@@ -295,17 +297,15 @@ mosaic.create <- function(mos = "Mosaic Images", dir = "Output Directory") {
   rgb.imgs <- paste0(mos,"/",rgb.nam);
   dir1 <- sub("/ready","",dir)
   if(length(ndvi.imgs)==1) {
-    #cpy <- file.copy(ndvi.imgs[1],paste0(wd,"/SentinelImages_NTmosaic/Sentinel_",img.dates[i],"/ready/",ndvi.nam))
+    # For Linux: using cp command
     sauce1 <- ndvi.imgs[1];
     target1 <- paste0(dir,"/",ndvi.nam)
-    comm.cp1 <- paste0("powershell -command Copy-Item ",sauce1," ", target1, " -Force"  );
-    comm.cp1 <- comm.cp1 <- gsub("/","\\\\",comm.cp1)
+    comm.cp1 <- paste0("cp ", sauce1, " ", target1);
     copied1 <- system(comm.cp1, wait = TRUE);
     print(paste("Copied 1 =",copied1))
     sauce2 <- rgb.imgs[1];
     target2 <- paste0(dir,"/",rgb.nam)
-    comm.cp2 <- paste0("powershell -command Copy-Item ",sauce2," ", target2, " -Force"  );
-    comm.cp2 <- gsub("/","\\\\",comm.cp2)
+    comm.cp2 <- paste0("cp ", sauce2, " ", target2);
     copied2<- system(comm.cp2, wait = TRUE);
     print(paste("Copied 2 =",copied2))
     if (copied1 == 0 & copied2 == 0) {

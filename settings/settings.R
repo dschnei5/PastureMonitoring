@@ -17,31 +17,31 @@ Interactive <- TRUE # Set TRUE for:
 
 ####Set Directories####
 
-w.dir <- "C:/R/PastureMonitoring"; # Local Working Directory (required)
+w.dir <- "/home/user/R/PastureMonitoring"; # Local Working Directory (required) - adjust /home/user to your home directory
 
 setwd(w.dir);
 
-d.dir <- "C:/R/PastureMonitoringData"; # Local Data Directory (hash out if cloud.dir used)
+d.dir <- "/home/user/R/PastureMonitoringData"; # Local Data Directory (hash out if cloud.dir used) - adjust /home/user to your home directory
 
-# cld.dir <-"cloud\\Data\\PastureMonitoringData"; # Cloud Directory (un-hash if needed) 
+# cld.dir <- "/mnt/cloud/Data/PastureMonitoringData"; # Cloud Directory (un-hash if needed) - adjust /mnt/cloud to your mount point
 
-# drv.l <- "z"; # Drive letter to temporarily allocate to cloud directory on mount (required if using cloud directory)
+# cld.mnt.pt <- "/mnt/cloud"; # Cloud mount point for Linux (required if using cloud directory)
 
-# drv.l.s <- "y" # Drive letter to temporarily allocate to Sentinel cloud directory on mount (required if using cloud directory)
+# cld.mnt.pt.s <- "/mnt/sentinel"; # Sentinel cloud mount point for Linux (required if using cloud directory)
 
-s.dir <- "P:/R/PastureMonitoringSentinel" # Location of Sentinel Images (hash out if cloud.s.dir used)
+s.dir <- "/home/user/R/PastureMonitoringSentinel" # Location of Sentinel Images (hash out if cloud.s.dir used) - adjust /home/user to your home directory
 
-# cld.s.dir <-"cloud\\Data\\SentinelImages"; # Cloud Sentinel Directory (un-hash if needed)
+# cld.s.dir <- "/mnt/sentinel/Data/SentinelImages"; # Cloud Sentinel Directory (un-hash if needed) - adjust /mnt/sentinel to your mount point
 
 ####Set Accounts####
 
-# cld.usr <- "CLD\\xxxxx"; # Cloud drive username (if applicable)
+# cld.usr <- "username"; # Cloud drive username (if applicable) - for Linux SMB mounts
 
-# cld.ser.nm <- "Cloud.CLD"; # Cloud service name (if applicable)
+# cld.ser.nm <- "cloud_share"; # Cloud service identifier (if applicable) - not needed for Linux
 
-# cld.s.usr <- "CLD\\xxxxx"; # Cloud Sentinel drive username (if applicable)
+# cld.s.usr <- "username"; # Cloud Sentinel drive username (if applicable) - for Linux SMB mounts
 
-# cld.s.ser.nm <- "Cloud.CLD"; # Cloud Sentinel service name (if applicable)
+# cld.s.ser.nm <- "sentinel_share"; # Cloud Sentinel service identifier (if applicable) - not needed for Linux
 
 cop.usr <- "XXXXXXX"; # Copernicus open access hub username (required)
 
