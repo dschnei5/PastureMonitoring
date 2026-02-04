@@ -7,6 +7,7 @@
 print("Loading user defined functions...");
 
 source(file = "functions/postprocess-images.R");
+source(file = "functions/cleanup-data-dirs.R");
 
 ####Execute Processing####
 base::message("Post-processing imagery for each selected farm, please wait...")
@@ -18,6 +19,9 @@ if(length(property.nam)>0 & fast){
 };
   
 av.shiny.apps <- app.update(pm = propmeta)
+
+# Clean up CSV files from www/DataOut folders (app uses GeoJSON only)
+cleanup.csv.from.www()
 
 MD5.check4 <- md5post(av.shiny.apps, MD5.check1)
 

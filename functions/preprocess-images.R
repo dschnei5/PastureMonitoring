@@ -42,35 +42,49 @@ unzip <- function(dir = "Directory", fn = "FileName" ) {
   rm(i);
 };
 print("unzip - successfully loaded");
-sen2cor <- function(dir = "Directory"){
-  # For Linux: using L2A_Process.py script
-  files.SAFE <- list.dirs(path=paste0(dir,"/unzipped"), recursive = FALSE, full.names = TRUE);
-  files.sen2cor <- list.dirs(path=paste0(dir,"/unzipped"), recursive = FALSE, full.names = FALSE);
-  for (i in seq_along(files.SAFE)) {
-    comm.sen2cor <- paste0("L2A_Process.py ", files.SAFE[i]);
-    system(comm.sen2cor, wait = TRUE);
-    print(paste(Sys.time(),"- File", files.sen2cor[i], "processed"));
-  }
-  rm(files.SAFE);
-}
-print("sen2cor - successfully loaded");
-dwnld.imgs <- function(x = "tile"){
+# sen2cor function removed - L2A products are already atmospherically corrected
+preprocess.sentinel <- function(x) {
   pw <- check4pw(usr = cop.usr,ser = "Copernicus")
-  paste0("Checking last ", numdaysback,"days for imagery with <", cld.pc,"% cloud for tile ",x)
-  query01 <- paste0("wget --no-check-certificate --user=",cop.usr," --password=",pw," --auth-no-challenge --output-document=tmp/query_results.txt \"https://scihub.copernicus.eu/dhus/search?q=",x," AND producttype:S2MSI1C AND cloudcoverpercentage:[0 TO ",cld.pc,"] AND endposition:[NOW-",numdaysback,"DAYS TO NOW]&format=json\"");
+  base::message(paste0("Checking last ", numdaysback," days for imagery with <", cld.pc,"% cloud for tile ",x))
+  
+  # Get access token for Copernicus Data Space API
+  token_query <- paste0("curl -s -d 'client_id=cdse-public' -d 'username=",cop.usr,"' -d 'password=",pw,"' -d 'grant_type=password' 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token' 2>/dev/null")
+  token_response <- system(token_query, intern = TRUE, wait = TRUE)
+  token_info <- jsonlite::fromJSON(token_response)
+  access_token <- token_info$access_token
+  
+  if(is.null(access_token)){
+    base::message("Failed to obtain access token. Please check credentials.")
+    return(NULL)
+  }
+  
+  # Calculate date range
+  end_date <- format(Sys.Date(), "%Y-%m-%dT23:59:59Z")
+  start_date <- format(Sys.Date() - numdaysback, "%Y-%m-%dT00:00:00Z")
+  
+  # Query for Sentinel-2 L2A products using OData API
+  query_url <- paste0("https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq 'SENTINEL-2' and contains(Name,'",x,"') and Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'productType' and att/OData.CSC.StringAttribute/Value eq 'S2MSI2A') and Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value le ",cld.pc,") and ContentDate/Start ge ",start_date," and ContentDate/Start le ",end_date,"&$orderby=ContentDate/Start desc&$expand=Attributes")
+  
+  query01 <- paste0("curl -s -H 'Authorization: Bearer ",access_token,"' '",query_url,"' -o tmp/query_results.txt 2>/dev/null")
   system(query01, wait = TRUE)
   info <- jsonlite::fromJSON(txt = "tmp/query_results.txt")
   unlink("tmp/query_results.txt")
-  numresults1 <- info$feed$`opensearch:totalResults` 
-  img.dates <- info$feed$entry$summary
-  img.href <- info$feed$entry$link
-  base::message(paste("Number of",x,"cloud free images found within the last", numdaysback,"days =",numresults1))
+  
+  numresults1 <- length(info$value$Id)
+  
+  base::message(paste("Number of",x,"cloud free L2A images found within the last", numdaysback,"days =",numresults1))
+  
   if (numresults1 > 0) {
     print(paste("Downloading new images for", x));
     for (i in 1:numresults1){
       print(i)
-      UUID <- img.href[[i]][[1]][1];
-      img.date <- strapplyc(strsplit(img.dates[i],",")[[1]][1],"[0-9]{4}-[0-9]{2}-[0-9]{2}", simplify = TRUE)
+      product_id <- info$value$Id[i]
+      product_name <- info$value$Name[i]
+      
+      # Extract date from product name (format: S2A_MSIL2A_YYYYMMDDTHHMMSS_...)
+      img.date <- substr(product_name, 12, 19)
+      img.date <- as.character(as.Date(img.date, format="%Y%m%d"))
+      
       wd <- getwd()
       new.wd <- paste0(s.dir,"/T",x,"/Sentinel_",img.date)
       creationsuccess <- suppressWarnings(dir.create(new.wd,recursive = TRUE));
@@ -85,14 +99,14 @@ dwnld.imgs <- function(x = "tile"){
       
       if (creationsuccess){
         setwd(new.wd);
-        query02 <- paste0("wget --no-http-keep-alive --content-disposition --auth-no-challenge --continue --user=",cop.usr," --password=",pw," \"",UUID,"\"");
-        ##https://scihub.copernicus.eu/dhus/odata/v1/Products('14215f82-94c1-442b-b470-db44cf64d0cb')/$value
+        download_url <- paste0("https://zipper.dataspace.copernicus.eu/odata/v1/Products(",product_id,")/$value")
+        query02 <- paste0("wget --no-http-keep-alive --content-disposition --continue --header='Authorization: Bearer ",access_token,"' '",download_url,"'");
         system(query02, wait = TRUE);
         setwd(wd)
         if(i<numresults1){
-          base::message(paste("...completed downloading",x,"image for",img.date,"moving to next image"))
+          base::message(paste("...completed downloading",x,"L2A image for",img.date,"moving to next image"))
         } else {
-          base::message(paste("...completed downloading",x,"image for",img.date,"all done, moving to next tile"))
+          base::message(paste("...completed downloading",x,"L2A image for",img.date,"all done, moving to next tile"))
         }
       } else {
         if(i<numresults1){
@@ -105,7 +119,7 @@ dwnld.imgs <- function(x = "tile"){
     }
   }
 };
-print("dwnld.imgs - successfully loaded")
+# sen2cor function removed - L2A products are already atmospherically corrected
 preprocess.sentinel <- function(x) {
   #d.dir <- get("d.dir", envir = .GlobalEnv);
   files.zip <- list.files(x,pattern = "\\.zip",include.dirs = FALSE);
@@ -114,29 +128,48 @@ preprocess.sentinel <- function(x) {
   suppressWarnings(dir.create(paste0(x,"/ready")));
   if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==0) {
     unzip(dir = x,fn = files.zip)
-    if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==1) {
-      sen2cor(dir = x)
-    }
+    # L2A products don't need sen2cor processing
+    print(paste0(x, " - Unzipping Done, L2A product ready for processing"))
   } else if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==1) {
-    unlink(list.dirs(paste0(x,"/unzipped"),recursive = FALSE,full.names = TRUE),recursive = TRUE);
-    unzip(dir = x,fn = files.zip)
-    if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==1) {
-      sen2cor(dir = x)
+    # Check if it's already L2A
+    files.READY <- list.dirs(path=paste0(x,"/unzipped"), recursive = FALSE, full.names = TRUE);
+    if (!any(grepl("MSIL2A",files.READY))) {
+      unlink(list.dirs(paste0(x,"/unzipped"),recursive = FALSE,full.names = TRUE),recursive = TRUE);
+      unzip(dir = x,fn = files.zip)
     }
-  } else if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))==2) {
+    print(paste0(x, " - L2A product ready for processing"))
+  } else if (length(list.dirs(paste0(x,"/unzipped"),recursive = FALSE))>=1) {
     files.READY <- list.dirs(path=paste0(x,"/unzipped"), recursive = FALSE, full.names = TRUE);
     files.READY <- files.READY[grepl("MSIL2A",files.READY)];
-    files <- list.files(files.READY, pattern = "._10m.jp2$", recursive = TRUE);
-    if (length(files) < 7){
-      unlink(files.READY, recursive = TRUE);
+    if (length(files.READY) > 0) {
+      files <- list.files(files.READY[1], pattern = "._10m.jp2$", recursive = TRUE);
+      if (length(files) < 7){
+        unlink(files.READY, recursive = TRUE);
+        unzip(dir = x,fn = files.zip)
+      }
+    } else {
+      # No L2A product found, unzip again
+      unlink(list.dirs(paste0(x,"/unzipped"),recursive = FALSE,full.names = TRUE),recursive = TRUE);
       unzip(dir = x,fn = files.zip)
-      sen2cor(dir = x)
     }
     print(paste0(x, " - Preprocessing Done"))
   }
   
 };
 print("preprocess.sentinel - successfully loaded");
+create.cloud.mask <- function(scl.file, mask.values = c(0, 1, 3, 8, 9, 10, 11)) {
+  # Read Scene Classification Layer (SCL) from L2A product
+  # SCL values: 0=NO_DATA, 1=SATURATED, 2=DARK_AREA, 3=CLOUD_SHADOWS, 4=VEGETATION, 
+  #             5=NOT_VEGETATED, 6=WATER, 7=UNCLASSIFIED, 8=CLOUD_MEDIUM_PROB, 
+  #             9=CLOUD_HIGH_PROB, 10=THIN_CIRRUS, 11=SNOW
+  scl <- raster(readGDAL(scl.file));
+  # Create mask: 1 = keep, NA = mask out
+  mask <- scl;
+  mask[mask %in% mask.values] <- NA;
+  mask[!is.na(mask)] <- 1;
+  return(mask)
+};
+print("create.cloud.mask - successfully loaded");
 create.tifs <- function(x) {
   files.READY <- list.dirs(path=paste0(x,"/unzipped"), recursive = FALSE, full.names = TRUE);
   files.READY <- files.READY[grepl("MSIL2A",files.READY)];
@@ -154,6 +187,23 @@ create.tifs <- function(x) {
     imagerydate <- as.character(imagerydate)
     img01.bands <- list.files(files.READY[1], pattern = "._10m.jp2$", full.names = TRUE, ignore.case = TRUE, recursive = TRUE)[c(4,3,2,5)];
     img01.bands <- gsub("/","\\\\",img01.bands)
+    
+    # Get cloud mask if enabled
+    cloud.mask <- NULL;
+    if (exists("apply.cloud.mask") && apply.cloud.mask) {
+      scl.file <- list.files(files.READY[1], pattern = "SCL_20m.jp2$", full.names = TRUE, ignore.case = TRUE, recursive = TRUE);
+      if (length(scl.file) > 0) {
+        t1 <- now();
+        base::message(paste(t1,"- Creating cloud mask from SCL band..."));
+        cloud.mask <- create.cloud.mask(scl.file[1], mask.values = scl.mask.values);
+        # Resample mask to 10m resolution to match the bands
+        cloud.mask <- resample(cloud.mask, raster(readGDAL(img01.bands[1])), method = 'ngb');
+        base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+      } else {
+        base::message("Warning: SCL band not found, proceeding without cloud masking");
+      }
+    }
+    
     print(paste(Sys.time(),"- Creating stack, this takes time..."))
     r1 <- raster(readGDAL(img01.bands[1]));
     r2 <- raster(readGDAL(img01.bands[2]));
@@ -162,6 +212,15 @@ create.tifs <- function(x) {
     img01 <- stack(r1,r2,r3,r4);
     rm(r1,r2,r3,r4);
     gc();
+    
+    # Apply cloud mask if available
+    if (!is.null(cloud.mask)) {
+      t1 <- now();
+      base::message(paste(t1,"- Applying cloud mask to image bands..."));
+      img01 <- mask(img01, cloud.mask);
+      base::message(paste(now(),"- Done - run time =",ceiling(difftime(now(),t1,units = "sec")),"seconds"));
+    }
+    
     t1 <- now();
     base::message(paste(t1,"- Converting stack to brick, this takes time..."));
     img01 <- brick(img01)

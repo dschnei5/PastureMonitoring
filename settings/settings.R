@@ -43,7 +43,7 @@ s.dir <- "/home/user/R/PastureMonitoringSentinel" # Location of Sentinel Images 
 
 # cld.s.ser.nm <- "sentinel_share"; # Cloud Sentinel service identifier (if applicable) - not needed for Linux
 
-cop.usr <- "XXXXXXX"; # Copernicus open access hub username (required)
+cop.usr <- "XXXXXXX"; # Copernicus Data Space Ecosystem username (required) - register at https://dataspace.copernicus.eu/
 
 master.app <- "/XxxxxxXXXXX_YXXxXXxY"
 
@@ -69,7 +69,18 @@ delete.leftovers <- FALSE # Clean up SentinelImages in storage location to save 
 
 create.mosaics <- FALSE # Use "TRUE" if you have farms that overlap imagery boundaries. Edit "mosaic.inf" in settings folder
 
+create.maps <- TRUE; # Generate PDF maps for each date (TRUE/FALSE - required)
+
+check.for.missing.maps <- TRUE; # Force processing to look for and create missing maps (TRUE/FALSE - required)
+
 max.cores <- NA; # Set numeric to limit number of parallel compute cores used for pre and post processing, NA available cores are detected
+
+####Cloud Masking Settings####
+
+apply.cloud.mask <- TRUE; # Apply cloud masking using Scene Classification Layer from L2A products (TRUE/FALSE - required)
+
+# SCL values to mask out: 0=NO_DATA, 1=SATURATED, 3=CLOUD_SHADOWS, 8=CLOUD_MEDIUM_PROB, 9=CLOUD_HIGH_PROB, 10=THIN_CIRRUS, 11=SNOW
+scl.mask.values <- c(0, 1, 3, 8, 9, 10, 11); # SCL pixel values to mask (required if apply.cloud.mask=TRUE)
 
 ####Email Out Settings####
 

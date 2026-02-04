@@ -80,6 +80,47 @@
     return(list(img.names,img.dates))
   }
   print("img.nms.dtes - successfully loaded!");
+  
+  check.missing.maps <- function(propmeta = "Propmeta", x = "Property Name", out.dir, check.missing = FALSE) {
+    # Check for missing maps and return list of image dates that need maps
+    if (!check.missing) {
+      return(list(missing_dates = as.Date(character(0)), missing_names = character(0)))
+    }
+    
+    maps.dir <- paste0(out.dir, "/Maps");
+    suppressWarnings(dir.create(maps.dir, showWarnings = FALSE));
+    
+    # Get all image dates from sentinel directories
+    sentinel.dirs <- list.dirs(path = paste0(s.dir, "/", propmeta[which(x == propmeta$Property), "Sentinel"]), recursive = FALSE);
+    sentinel.dirs <- sentinel.dirs[grepl("Sentinel_", sentinel.dirs)];
+    
+    if (length(sentinel.dirs) == 0) {
+      return(list(missing_dates = as.Date(character(0)), missing_names = character(0)))
+    }
+    
+    a <- nchar(sentinel.dirs[1]) - 9
+    b <- nchar(sentinel.dirs[1]) * 1
+    splithim <- function(q) {substr(q, a, b)};
+    img.dates <- ymd(sapply(sentinel.dirs, splithim, USE.NAMES = FALSE));
+    
+    # Get only completed images
+    done1 <- unlist(lapply(sentinel.dirs, done.files))
+    img.dates <- img.dates[done1]
+    sentinel.dirs <- sentinel.dirs[done1]
+    
+    # Check which maps exist
+    existing.maps <- list.files(maps.dir, pattern = "_GDM_.*\\.pdf$", full.names = FALSE);
+    existing.dates <- as.Date(gsub(".*_GDM_", "", gsub("\\.pdf$", "", existing.maps)), format = "%Y-%m-%d");
+    
+    # Find missing maps
+    missing_idx <- !img.dates %in% existing.dates
+    missing_dates <- img.dates[missing_idx]
+    missing_names <- sentinel.dirs[missing_idx]
+    
+    return(list(missing_dates = missing_dates, missing_names = missing_names))
+  };
+  print("check.missing.maps - successfully loaded!");
+  
   post.processor <- function(x) {
     t1 <- now()
     print(paste(now(),"- Processing of", x, "started"));
@@ -262,9 +303,7 @@
           dta.out.full <- dta.out.full[,!col.chk];
           if (dim(dta.out.full)[2] != dim(all.data.file)[2]){
             write.csv(dta.out.full, paste0(d.dir,propmeta.i$OutLoc,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE);
-            write.csv(dta.out.full, paste0(d.dir,propmeta.i$AppFile,"/",x,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE);
-            if (!is.na(propmeta.i$AppFile2nd)) {write.csv(dta.out.full, paste0(d.dir,propmeta.i$AppFile2nd,"/",x,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE)};
-            write.csv(dta.out.full, paste0(d.dir,"/ShinyApps",master.app,"/www/DataOut/",x,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE);
+            # CSV files no longer copied to ShinyApps www folders - app uses GeoJSON only
           }
         } else {
           base::message( "All new files contained imagery that didnt overlap with property shapefile...")
@@ -296,13 +335,10 @@
         # table(col.chk);
         dta.out.full <- dta.out.full[,!col.chk];
         write.csv(dta.out.full, paste0(d.dir,propmeta.i$OutLoc,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE);
-        write.csv(dta.out.full, paste0(d.dir,propmeta.i$AppFile,"/",x,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE);
-        if (!is.na(propmeta.i$AppFile2nd)) {write.csv(dta.out.full, paste0(d.dir,propmeta.i$AppFile2nd,"/",x,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE)};
+        # CSV files no longer copied to ShinyApps www folders - app uses GeoJSON only
         if (!dir.exists(paste0(d.dir,"/ShinyApps",master.app,"/www/DataOut/",x))) {
-          dir.create(paste0(d.dir,"/ShinyApps",master.app,"/www/DataOut/",x),recursive = TRUE)
-          dir.create(paste0(d.dir,"/ShinyApps",master.app,"/www/DataOut/",x,"/GeoJson"))
+          dir.create(paste0(d.dir,"/ShinyApps",master.app,"/www/DataOut/",x,"/GeoJson"),recursive = TRUE)
         }
-        write.csv(dta.out.full, paste0(d.dir,"/ShinyApps",master.app,"/www/DataOut/",x,"/",x,"_GDM_AllAvailableDates.csv"), row.names = FALSE);
         boundary2 <- boundary1;
         if (class(boundary1)[1]=="SpatialPointsDataFrame"){
           row.names(dta.out.full) <- boundary2@data$ID;
@@ -325,6 +361,56 @@
       base::message(paste("Processing end time:", Sys.time()));
       Sys.sleep(2);
       
+      # Create maps for newly processed images if enabled
+      if (exists("create.maps") && create.maps && length(img.dates) > 0) {
+        base::message(paste("Creating PDF maps for", x, "..."));
+        for (j in seq_along(img.dates)) {
+          # Read the GDM data for this date
+          csv_file <- paste0(d.dir, propmeta.i$OutLoc, "/", x, "_GDM_", img.dates[j], ".csv");
+          if (file.exists(csv_file)) {
+            dta.out <- read.csv(csv_file, header = TRUE, check.names = FALSE, row.names = 1);
+            dta.out <- dta.out[-1]; # Remove PADD_NAME column
+            
+            # Recreate spatial objects for mapping
+            padd.out1 <- SpatialPolygonsDataFrame(boundary1, dta.out, match.ID = FALSE);
+            pts.poly1 <- SpatialPointsDataFrame(boundary1, dta.out);
+            
+            # Create the map
+            map.success <- make.maps(x = x, i = 1, j = j, img.dates = img.dates, 
+                                     padd.out1 = padd.out1, pts.poly1 = pts.poly1, 
+                                     dims1 = dims1, out.dir = out.dir, propmeta.i = propmeta.i);
+          }
+        }
+      }
+      
+      # Check for missing maps if enabled
+      if (exists("check.for.missing.maps") && check.for.missing.maps) {
+        missing.maps <- check.missing.maps(propmeta = propmeta, x = x, out.dir = out.dir, check.missing = TRUE);
+        if (length(missing.maps$missing_dates) > 0) {
+          base::message(paste("Found", length(missing.maps$missing_dates), "missing maps for", x, ". Creating them now..."));
+          
+          # Process missing maps
+          for (m in seq_along(missing.maps$missing_dates)) {
+            base::message(paste("Creating missing map for", x, "on", missing.maps$missing_dates[m], "..."));
+            # Read the GDM data for this date
+            csv_file <- paste0(d.dir, propmeta.i$OutLoc, "/", x, "_GDM_", missing.maps$missing_dates[m], ".csv");
+            if (file.exists(csv_file)) {
+              dta.out <- read.csv(csv_file, header = TRUE, check.names = FALSE, row.names = 1);
+              dta.out <- dta.out[-1]; # Remove PADD_NAME column
+              
+              # Recreate spatial objects for mapping
+              padd.out1 <- SpatialPolygonsDataFrame(boundary1, dta.out, match.ID = FALSE);
+              pts.poly1 <- SpatialPointsDataFrame(boundary1, dta.out);
+              
+              # Create the map
+              map.success <- make.maps(x = x, i = 1, j = m, img.dates = missing.maps$missing_dates, 
+                                       padd.out1 = padd.out1, pts.poly1 = pts.poly1, 
+                                       dims1 = dims1, out.dir = out.dir, propmeta.i = propmeta.i);
+            }
+          }
+        }
+      }
+      
     }
     base::message(paste("Done - Time Elapsed =", time_length(Sys.time() - t1), "seconds"));
     print(paste("All new images for",x,"successfully processed moving on to app deploy"));
@@ -336,73 +422,140 @@
   select.imgs.only <- function(propmeta = "Propmeta",imndts = "image.names.dates") {
     
   };  ####NOT IMPLEMENTED YET####
-  make.maps <- function() {
-    colfunc <- colorRampPalette(c("#DD0000","#DA6500","#D7C900","#7FD500","#1BD200","#00D045","#00CDA4","#0094CB","#0035C8","#2700C6"));
-    col.50 <- colfunc(50);
-    legend_image <- as.raster(matrix(colfunc(10), ncol = 1));
-    brks <- seq(0,4000,length.out = 50);
-    grps <- with(padd.out1@data, base::cut(padd.out1@data$GDM_ADJ, breaks = brks, include.lowest = TRUE));
-    padd.out1@data$COLOUR <- col.50[grps];
+  
+  make.maps <- function(x, i, j, img.dates, padd.out1, pts.poly1, dims1, out.dir, propmeta.i) {
+    # Create nicely formatted PDF maps for each image date
+    # x = property name
+    # i = property index
+    # j = image/date index
+    # img.dates = vector of image dates
+    # padd.out1 = spatial data frame with GDM_ADJ column
+    # pts.poly1 = points with GDM_ADJ values
+    # dims1 = raster dimensions (extent)
+    # out.dir = output directory path
+    # propmeta.i = property metadata
     
-    img.sz.x <- dims1[2]-dims1[1];
-    img.sz.y <- dims1[4]-dims1[3];
-    leg.len <- 0.2 * img.sz.y;
-    leg.wd <- 0.3 * leg.len;
-    
-    cntr.pnt.x <- mean(c(dims1[2],dims1[1]));
-    cntr.pnt.y <- mean(c(dims1[4],dims1[3]));
-    
-    leg.loc.x1 <- cntr.pnt.x + (0.57*img.sz.x);
-    leg.loc.y1 <- cntr.pnt.y - (0.68*img.sz.y);
-    leg.loc.x2 <- cntr.pnt.x + (0.4*img.sz.x);
-    leg.loc.y2 <- cntr.pnt.y + (0.5*img.sz.y);
-    leg.loc.x3 <- dims1[1] + (0.15*img.sz.x);
-    leg.loc.y3 <- dims1[3] + (0.05*img.sz.x);
-    leg.loc.y4 <- dims1[3] + (1.05*img.sz.x);
-    
-    sca.ba.len <- round_any(img.sz.x/2,100);
-    
-    logo <- readPNG(paste0(wd,"/Logos/",propmeta.i$Logo));
-    logo <- resize(x = logo,w = 90, filter ="bilinear");
-    
-    log.loc.xl <- cntr.pnt.x - (0.57*img.sz.x);
-    log.loc.yt <- cntr.pnt.y + (0.68*img.sz.y);
-    log.loc.xr <- (0.25 * img.sz.x) + log.loc.xl;
-    log.loc.yb <- log.loc.yt - 1.25 * (((log.loc.xr-log.loc.xl)/dim(logo)[2]) * dim(logo)[1]);
-    
-    set.cex <- 1250/img.sz.x;
-    set.cex[set.cex >= 0.8] <- 0.8; 
-    
-    plot(padd.out1,xlim = c(dims1[1] - 0.0025*dims1[1], dims1[2] + 0.0025*dims1[2]), ylim = c(dims1[3] - 0.00025*dims1[3], dims1[4] + 0.00025*dims1[4]), col =  padd.out1@data$COLOUR, main = paste0(x[i], " - Average GDM - ",img.dates[j]));
-    points(pts.poly1, pch = 20, cex = 0.00,col = "grey8");
-    text(pts.poly1,labels = paste(round(pts.poly1@data$GDM_ADJ),"kg/ha"), col = "grey8", cex = set.cex, pos = 4, offset = -0.3);
-    box(which = "plot", lty = "solid");
-    text(x = leg.loc.x1, y = seq(leg.loc.y1, leg.loc.y1 + leg.len, l=6), labels = paste(seq(0, 4000,l=6),"kg/ha"), cex = 0.65);
-    rasterImage(legend_image, xleft = leg.loc.x2, ybottom = leg.loc.y1+leg.len, xright = leg.loc.x2+leg.wd, ytop = leg.loc.y1)
-    north.arrow(xb = leg.loc.x1, yb = leg.loc.y2, len=img.sz.y*0.025, lab = "N");
-    GISTools::map.scale(x = leg.loc.x3, y = dims1[3]-0.5*leg.len , len = sca.ba.len, ndivs = ceiling(sca.ba.len/1000), subdiv = 1, units = "kilometres");
-    rasterImage(logo, xleft = log.loc.xl, ybottom = log.loc.yb, xright = log.loc.xr, ytop = log.loc.yt);
-    Sys.sleep(3);
-    dev.off();
-    
-    pdf(paste0(wd,propmeta.i$OutLoc,"/Maps/", x[i], "_GDM_",img.dates[j],".pdf"),width = 20, height = 25, paper = "a4");
-    plot(padd.out1,xlim = c(dims1[1] - 0.0025*dims1[1], dims1[2] + 0.0025*dims1[2]), ylim = c(dims1[3] - 0.00025*dims1[3], dims1[4] + 0.00025*dims1[4]), col =  padd.out1@data$COLOUR, main = paste0(x[i], " - Average GDM - ",img.dates[j]));
-    points(pts.poly1, pch = 20, cex = 0.00,col = "grey8");
-    text(pts.poly1,labels = paste(round(pts.poly1@data$GDM_ADJ),"kg/ha"), col = "grey8", cex = set.cex, pos = 4, offset = -0.3);
-    box(which = "plot", lty = "solid");
-    text(x = leg.loc.x1, y = seq(leg.loc.y1, leg.loc.y1 + leg.len, l=6), labels = paste(seq(0, 4000,l=6),"kg/ha"), cex = 0.65);
-    rasterImage(legend_image, xleft = leg.loc.x2, ybottom = leg.loc.y1+leg.len, xright = leg.loc.x2+leg.wd, ytop = leg.loc.y1)
-    north.arrow(xb = leg.loc.x1, yb = leg.loc.y2, len=img.sz.y*0.025, lab = "N");
-    GISTools::map.scale(x = leg.loc.x3, y = dims1[3]-0.5*leg.len , len = sca.ba.len, ndivs = ceiling(sca.ba.len/1000), subdiv = 1, units = "kilometres");
-    rasterImage(logo, xleft = log.loc.xl, ybottom = log.loc.yb, xright = log.loc.xr, ytop = log.loc.yt);
-    dev.off();
-    
-    #plot(padd.out1,xlim = c(dims1[1], dims1[2]),ylim = c(dims1[3],dims1[4]), col =  padd.out1@data$COLOUR, main = paste0(x[i], " - Average GDM - ",img.dates[j]));
-    
-    rm(img.sz.x,img.sz.y,leg.len,leg.loc.x1,leg.loc.x2,leg.loc.x3,leg.loc.y1,leg.loc.y2,leg.loc.y3,leg.loc.y4,leg.wd,legend_image,log.loc.xl,log.loc.xr,log.loc.yb,log.loc.yt,logo,sca.ba.len,set.cex,cntr.pnt.x,cntr.pnt.y,brks,col.50,col.chk,grps)
-    gc()
-    
-  }; ####NOT IMPLEMENTED YET####
+    tryCatch({
+      # Create color palette (red to green gradient)
+      colfunc <- colorRampPalette(c("#DD0000","#DA6500","#D7C900","#7FD500","#1BD200","#00DD00","#00BB00","#008800","#006600","#003300"));
+      col.50 <- colfunc(50);
+      legend_image <- as.raster(matrix(colfunc(10), ncol = 1));
+      
+      # Create breaks and assign colors to polygons
+      brks <- seq(0, 4000, length.out = 50);
+      grps <- with(padd.out1@data, base::cut(padd.out1@data$GDM_ADJ, breaks = brks, include.lowest = TRUE));
+      padd.out1@data$COLOUR <- col.50[grps];
+      
+      # Calculate map dimensions and legend positions
+      img.sz.x <- dims1[2] - dims1[1];
+      img.sz.y <- dims1[4] - dims1[3];
+      leg.len <- 0.2 * img.sz.y;
+      leg.wd <- 0.03 * img.sz.x;
+      
+      cntr.pnt.x <- mean(c(dims1[2], dims1[1]));
+      cntr.pnt.y <- mean(c(dims1[4], dims1[3]));
+      
+      leg.loc.x1 <- cntr.pnt.x + (0.38 * img.sz.x);
+      leg.loc.y1 <- cntr.pnt.y - (0.40 * img.sz.y);
+      leg.loc.x2 <- leg.loc.x1 - leg.wd;
+      leg.loc.y2 <- leg.loc.y1 + leg.len;
+      
+      leg.loc.x3 <- dims1[1] + (0.05 * img.sz.x);
+      leg.loc.y3 <- dims1[3] + (0.08 * img.sz.y);
+      
+      sca.ba.len <- round_any(img.sz.x / 3, 100);
+      
+      set.cex <- 1250 / img.sz.x;
+      set.cex[set.cex >= 0.8] <- 0.8; 
+      
+      # Create title text
+      title_text <- paste0(x, " - Average GDM (kg/ha) - ", format(img.dates[j], "%d %b %Y"));
+      
+      # Ensure Maps directory exists
+      suppressWarnings(dir.create(paste0(out.dir, "/Maps"), showWarnings = FALSE));
+      
+      # Create PDF file
+      pdf_path <- paste0(out.dir, "/Maps/", x, "_GDM_", format(img.dates[j], "%Y-%m-%d"), ".pdf");
+      pdf(pdf_path, width = 14, height = 11, paper = "a4");
+      
+      # Set plot margins
+      par(mar = c(3, 3, 2, 1));
+      
+      # Plot the main map
+      plot(padd.out1,
+           xlim = c(dims1[1] - 0.025 * img.sz.x, dims1[2] + 0.025 * img.sz.x),
+           ylim = c(dims1[3] - 0.025 * img.sz.y, dims1[4] + 0.025 * img.sz.y),
+           col = padd.out1@data$COLOUR,
+           main = title_text,
+           cex.main = 1.5,
+           font.main = 2,
+           xlab = "Longitude",
+           ylab = "Latitude");
+      
+      # Add grid
+      grid(lty = 3, col = "grey80", lwd = 0.5);
+      
+      # Add points with labels
+      points(pts.poly1, pch = 21, cex = 1.2, bg = "white", col = "grey20");
+      text(pts.poly1,
+           labels = paste(round(pts.poly1@data$GDM_ADJ, 0), "kg/ha"),
+           col = "grey20",
+           cex = 0.7,
+           pos = 2,
+           offset = 0.3);
+      
+      # Add color legend
+      legend_x <- leg.loc.x2;
+      legend_y <- leg.loc.y1;
+      rasterImage(legend_image, xleft = legend_x, ybottom = legend_y, xright = legend_x + leg.wd, ytop = leg.loc.y2);
+      
+      # Add legend labels
+      leg_labels <- as.character(seq(0, 4000, by = 800));
+      leg_positions <- seq(legend_y, leg.loc.y2, length.out = length(leg_labels));
+      text(x = legend_x + leg.wd + 0.005 * img.sz.x,
+           y = leg_positions,
+           labels = leg_labels,
+           cex = 0.8,
+           adj = c(0, 0.5));
+      text(x = legend_x + leg.wd + 0.025 * img.sz.x,
+           y = leg.loc.y2 + 0.03 * img.sz.y,
+           labels = "GDM (kg/ha)",
+           cex = 0.9,
+           font = 2,
+           adj = c(0, 0));
+      
+      # Add north arrow
+      north.arrow(xb = leg.loc.x1 - 0.05 * img.sz.x,
+                  yb = leg.loc.y2 + 0.1 * img.sz.y,
+                  len = img.sz.y * 0.035,
+                  lab = "N");
+      
+      # Add scale bar
+      GISTools::map.scale(x = leg.loc.x3,
+                         y = dims1[3] + 0.02 * img.sz.y,
+                         len = sca.ba.len,
+                         ndivs = ceiling(sca.ba.len / 1000),
+                         subdiv = 1,
+                         units = "kilometres",
+                         subfont = 1);
+      
+      # Add footer with property and date info
+      mtext(paste0("Generated: ", format(Sys.time(), "%d %b %Y %H:%M:%S")),
+            side = 1,
+            line = -1,
+            cex = 0.7,
+            col = "grey50");
+      
+      dev.off();
+      base::message(paste("PDF map created:", basename(pdf_path)));
+      
+      return(TRUE);
+    }, error = function(e) {
+      base::message(paste("Error creating map for", x, "on", img.dates[j], ":", e$message));
+      return(FALSE);
+    });
+  };
+  print("make.maps - successfully loaded!");
   postprocess.fast <- function(x) {
     no_cores <- availableCores();
     if (!is.na(max.cores)) {no_cores <- max.cores}

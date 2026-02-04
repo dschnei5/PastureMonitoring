@@ -27,8 +27,8 @@ if (Interactive){
   sapply(tiles,dwnld.imgs);
 };
 
-# Preprocess Sentinel-1C product to 2A
-base::message("Checking for new imagery that needs preprocessing with Sen2Cor...")
+# Preprocess Sentinel-2 L2A products (unzip only, no sen2cor needed)
+base::message("Checking for new L2A imagery that needs unzipping...")
 sentinel.dirs <- sen.folds(ss = s.dir);
 if (Interactive){
   print("Would you like to preprocess available imagery? [yes/no]");
@@ -36,7 +36,7 @@ if (Interactive){
   preimg <- scan(file=con, sep=',', nlines=1, what = 'character', quiet=TRUE);
   preimg <- tolower(preimg)
   if (preimg == 'yes' | preimg == 'y' | preimg == 'yeah' | preimg == 'yep' | preimg == 'true') {
-    base::message("Preprocessing new imagery...");
+    base::message("Unzipping new L2A imagery...");
     if(length(sentinel.dirs)>0 & !pre.fast){
       sapply(sentinel.dirs,preprocess.sentinel)
       sapply(sentinel.dirs,create.tifs)

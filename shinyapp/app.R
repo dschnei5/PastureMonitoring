@@ -28,6 +28,7 @@ library(leaflet)  # For mapping
 # 0.6 - Updated to allow point geoJSOn files 
 # 0.7 - Reimplemented mapping using sf and leaflet
 # 0.8 - Fixed atomic vector error in single-paddock/single-date scenarios
+# 0.9 - Removed CSV dependency, app now uses only GeoJSON files for both plots and maps
 
 #################################################################################################################
 
@@ -64,19 +65,24 @@ server <- function(input, output, session) {
     updateSelectInput(session, "property2", selected = input$property)
   })
   
-  # Data for Plot App (CSV)
+  # Data for Plot and Map Apps (GeoJSON via sf - single data source)
   dta.in <- reactive({
-    file_path <- paste0("www/DataOut/",selected_property(),"/",selected_property(),"_GDM_AllAvailableDates.csv")
-    if(file.exists(file_path)){
-      df <- read.csv(file_path, header = TRUE, check.names = FALSE)
-      df <- as.data.frame(df)
-      return(df)
+    geojson_file <- paste0("www/DataOut/",selected_property(),"/GeoJson/",selected_property(),"_GDM_AllAvailableDates.geojson")
+    if(file.exists(geojson_file)) {
+      # Read using sf (quietly)
+      tryCatch({
+        data <- st_read(geojson_file, quiet = TRUE)
+        # Drop geometry for plot operations, convert to regular dataframe
+        st_drop_geometry(data)
+      }, error = function(e) {
+        return(NULL)
+      })
     } else {
-      return(NULL)
+      NULL
     }
   }) 
   
-  # Data for Map App (GeoJSON via sf)
+  # Data for Map App (GeoJSON via sf - keeps geometry)
   dta.in2 <- reactive({
     geojson_file <- paste0("www/DataOut/",input$property2,"/GeoJson/",input$property2,"_GDM_AllAvailableDates.geojson")
     if(file.exists(geojson_file)) {
@@ -480,7 +486,7 @@ server <- function(input, output, session) {
     vals <- data[[input$datadate2]]
     
     # Create color palette (Same as original)
-    colfunc <- colorRampPalette(c("#DD0000","#DA6500","#D7C900","#7FD500","#1BD200","#00D045","#00CDA4","#0094CB","#0035C8","#2700C6"))
+    colfunc <- colorRampPalette(c("#DD0000","#DA6500","#D7C900","#7FD500","#1BD200","#00DD00","#00BB00","#008800","#006600","#003300"))
     col.50 <- colfunc(50)
     pal <- colorNumeric(col.50, domain = vals, na.color = "transparent")
     
