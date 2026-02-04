@@ -20,6 +20,8 @@ Take your time completing the optional parameters in the settings/settings.R scr
 
 **PDF Map Generation:** The processor automatically generates professional PDF maps for each image date and shapefile. Maps include color-coded GDM estimates, paddock labels, north arrow, scale bar, and formatted legend. Maps are saved in the DataOut/{property}/Maps directory and can be used for reporting and analysis.
 
+**Partial Coverage Tile Detection:** The download function automatically identifies and skips partial coverage tiles based on file size. Since partial coverage tiles from Copernicus are typically much smaller than full tiles, this prevents wasted downloads and processing time. The minimum file size threshold is configurable.
+
 ## Setup Instructions
 
 Options are available to allow you to connect to a cloud drive, assuming that you are able to mount the location to your local machine or server running the processor, be wary of large bandwidth requirements of moving and processing large image files from a remote source however. Using a web based cloud server will significantly slow down the processing and use a lot of bandwidth.  This functionality is really only designed for storage locations that are connected to a cloud based VM running the processor.
@@ -62,6 +64,20 @@ Each map includes:
 - Scale bar and north arrow
 - Professional legend and formatting
 - Generation timestamp
+
+## Partial Coverage Tile Filtering
+
+The download function automatically filters out partial coverage tiles based on file size. To configure:
+
+1. Set `skip.partial.coverage <- TRUE` in settings/settings.R to enable filtering (default: TRUE)
+2. Set `min.file.size.mb <- 800` to specify the minimum file size threshold in MB (default: 800)
+
+Partial coverage tiles from Copernicus Data Space are typically less than 500-600 MB, while full tiles are usually 900+ MB. When a tile is identified as partial coverage, it will be logged as skipped and the download will be prevented, saving bandwidth and processing time.
+
+Messages like the following will appear:
+```
+Skipping partial coverage tile for 56JLL on 2024-01-15 - File size: 450 MB (threshold: 800 MB)
+```
 
 ## Running the Processor
 

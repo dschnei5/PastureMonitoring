@@ -59,6 +59,10 @@ cld.pc <- 5; # percentage of cloud allowed for image download (required)
 
 numdaysback <- 10; # number of days into past to look for imagery, sentinel collected every 5 days (required)
 
+skip.partial.coverage <- TRUE; # Skip partial coverage tiles based on file size (TRUE/FALSE - required)
+
+min.file.size.mb <- 800; # Minimum file size in MB to download, partial coverage tiles typically <800MB (required if skip.partial.coverage=TRUE)
+
 post.fast <- FALSE; # Use parallel computing to perform post-processing when running processor not interactively (required)
 
 pre.fast <- FALSE; # Use parallel computing to perform pre-processing when running processor not interactively (required)

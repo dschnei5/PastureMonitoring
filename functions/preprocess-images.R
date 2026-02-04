@@ -85,6 +85,19 @@ preprocess.sentinel <- function(x) {
       img.date <- substr(product_name, 12, 19)
       img.date <- as.character(as.Date(img.date, format="%Y%m%d"))
       
+      # Check file size if skip.partial.coverage is enabled
+      if (exists("skip.partial.coverage") && skip.partial.coverage) {
+        product_size_bytes <- ifelse(!is.null(info$value$ContentLength[i]), info$value$ContentLength[i], 0)
+        product_size_mb <- product_size_bytes / (1024 * 1024)
+        min_size_mb <- ifelse(exists("min.file.size.mb"), min.file.size.mb, 800)
+        
+        if (product_size_mb < min_size_mb) {
+          base::message(paste("Skipping partial coverage tile for", x, "on", img.date, 
+                             "- File size:", round(product_size_mb, 0), "MB (threshold:", min_size_mb, "MB)"));
+          next
+        }
+      }
+      
       wd <- getwd()
       new.wd <- paste0(s.dir,"/T",x,"/Sentinel_",img.date)
       creationsuccess <- suppressWarnings(dir.create(new.wd,recursive = TRUE));
